@@ -1,0 +1,437 @@
+{
+    "project": {
+        "project_id": 1759926505165,
+        "name": "a2",
+        "type": "closed",
+        "cards": [
+            "Network Map",
+            "Wi-Fi",
+            "WAN",
+            "LAN",
+            "Ethernet",
+            "GRE Tunnels",
+            "Firewall",
+            "Parental Controls",
+            "Port Triggering",
+            "Port Filtering",
+            "Port Forwarding",
+            "MAC Filtering",
+            "DMZ",
+            "VPN",
+            "Local UI Password",
+            "Speed Test",
+            "Wi-Fi Analyzer",
+            "Wi-Fi Score",
+            "Wi-Fi Diagnostics",
+            "Device Diagnostics",
+            "Device logs",
+            "Crash logs",
+            "Events & Alert history",
+            "Device Processes",
+            "DOCSIS Statistics",
+            "Firmware",
+            "Back up & Restore",
+            "Advanced Services",
+            "NTP Server"
+        ],
+        "categories": [
+            "Network",
+            "Security",
+            "Diagnostics",
+            "Troubleshooting",
+            "Settings",
+            "Voice"
+        ]
+    },
+    "results": [
+        {
+            "email": "psandeepreddy060619@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "Wi-Fi",
+                        "Network Map",
+                        "MAC Filtering",
+                        "Device Diagnostics",
+                        "Firmware"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "LAN",
+                        "GRE Tunnels",
+                        "Local UI Password",
+                        "Device logs",
+                        "Back up & Restore"
+                    ],
+                    "category_name": "Security"
+                },
+                {
+                    "cards": [
+                        "Ethernet",
+                        "WAN",
+                        "VPN",
+                        "Wi-Fi Diagnostics",
+                        "Events & Alert history",
+                        "Advanced Services"
+                    ],
+                    "category_name": "Diagnostics"
+                },
+                {
+                    "cards": [
+                        "Firewall",
+                        "Port Triggering",
+                        "Wi-Fi Analyzer",
+                        "Device Processes"
+                    ],
+                    "category_name": "Troubleshooting"
+                },
+                {
+                    "cards": [
+                        "Parental Controls",
+                        "Port Forwarding",
+                        "Speed Test",
+                        "DOCSIS Statistics"
+                    ],
+                    "category_name": "Settings"
+                },
+                {
+                    "cards": [
+                        "Port Filtering",
+                        "DMZ",
+                        "Wi-Fi Score",
+                        "Crash logs",
+                        "NTP Server"
+                    ],
+                    "category_name": "Voice"
+                }
+            ],
+            "id": "fdd5e5e0-2156-4d97-866e-e2c114a284de",
+            "deletedAt": null,
+            "createdAt": "2026-01-14T08:20:03.993209+00:00"
+        },
+        {
+            "email": "shekhar@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "WAN",
+                        "Ethernet",
+                        "Firewall",
+                        "Port Triggering",
+                        "Port Filtering",
+                        "VPN",
+                        "Local UI Password",
+                        "Wi-Fi Analyzer",
+                        "Wi-Fi Score",
+                        "Device Diagnostics",
+                        "Device logs",
+                        "Firmware",
+                        "Port Forwarding",
+                        "Device Processes",
+                        "Advanced Services",
+                        "Wi-Fi Diagnostics"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "GRE Tunnels",
+                        "Parental Controls",
+                        "LAN",
+                        "Crash logs",
+                        "DOCSIS Statistics",
+                        "Network Map"
+                    ],
+                    "category_name": "Security"
+                },
+                {
+                    "cards": [
+                        "Wi-Fi",
+                        "Speed Test",
+                        "MAC Filtering",
+                        "NTP Server"
+                    ],
+                    "category_name": "Diagnostics"
+                },
+                {
+                    "cards": [
+                        "DMZ"
+                    ],
+                    "category_name": "Troubleshooting"
+                },
+                {
+                    "cards": [
+                        "Events & Alert history"
+                    ],
+                    "category_name": "Settings"
+                },
+                {
+                    "cards": [
+                        "Back up & Restore"
+                    ],
+                    "category_name": "Voice"
+                }
+            ],
+            "id": "8a9ea2a3-e368-4546-ae80-1c35f0999762",
+            "deletedAt": null,
+            "createdAt": "2025-10-14T08:32:22.395175+00:00"
+        },
+        {
+            "email": "123@kodh.com",
+            "categories": [
+                {
+                    "cards": [
+                        "Wi-Fi",
+                        "Parental Controls",
+                        "Port Forwarding",
+                        "Ethernet",
+                        "Local UI Password",
+                        "Device logs",
+                        "Device Diagnostics",
+                        "WAN",
+                        "Events & Alert history",
+                        "Firmware"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "LAN",
+                        "GRE Tunnels",
+                        "Firewall",
+                        "MAC Filtering",
+                        "Crash logs",
+                        "Back up & Restore"
+                    ],
+                    "category_name": "Security"
+                },
+                {
+                    "cards": [
+                        "Port Filtering",
+                        "Speed Test",
+                        "VPN",
+                        "Device Processes"
+                    ],
+                    "category_name": "Diagnostics"
+                },
+                {
+                    "cards": [
+                        "Wi-Fi Analyzer",
+                        "Network Map",
+                        "DMZ"
+                    ],
+                    "category_name": "Troubleshooting"
+                },
+                {
+                    "cards": [
+                        "Port Triggering",
+                        "Wi-Fi Score",
+                        "Advanced Services"
+                    ],
+                    "category_name": "Settings"
+                },
+                {
+                    "cards": [
+                        "Wi-Fi Diagnostics",
+                        "DOCSIS Statistics",
+                        "NTP Server"
+                    ],
+                    "category_name": "Voice"
+                }
+            ],
+            "id": "6091296e-cf22-422e-af9d-b1cd880bfcb4",
+            "deletedAt": null,
+            "createdAt": "2025-10-10T09:34:15.106207+00:00"
+        },
+        {
+            "email": "jsmith@example.com",
+            "categories": [
+                {
+                    "cards": [
+                        "WAN"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "Ethernet"
+                    ],
+                    "category_name": "Security"
+                }
+            ],
+            "id": "a65315ad-98a8-4bb9-96b8-2620cab4b039",
+            "deletedAt": null,
+            "createdAt": "2025-10-10T08:20:07.528735+00:00"
+        },
+        {
+            "email": "ioio@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "GRE Tunnels",
+                        "Parental Controls",
+                        "Port Filtering",
+                        "Port Forwarding"
+                    ],
+                    "category_name": "Troubleshooting"
+                }
+            ],
+            "id": "d1073a56-9a06-425e-9812-58e4aaace4d8",
+            "deletedAt": null,
+            "createdAt": "2025-10-09T20:27:41.690079+00:00"
+        },
+        {
+            "email": "kool@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "Firewall"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "Port Triggering"
+                    ],
+                    "category_name": "Security"
+                },
+                {
+                    "cards": [
+                        "Port Filtering"
+                    ],
+                    "category_name": "Diagnostics"
+                },
+                {
+                    "cards": [
+                        "Parental Controls"
+                    ],
+                    "category_name": "Troubleshooting"
+                },
+                {
+                    "cards": [
+                        "Port Forwarding"
+                    ],
+                    "category_name": "Settings"
+                },
+                {
+                    "cards": [
+                        "MAC Filtering"
+                    ],
+                    "category_name": "Voice"
+                }
+            ],
+            "id": "cc6fda5a-a91d-4321-91a2-3af6e65b5c0f",
+            "deletedAt": null,
+            "createdAt": "2025-10-09T20:26:59.640242+00:00"
+        },
+        {
+            "email": "123kid@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "Firewall",
+                        "Network Map",
+                        "WAN",
+                        "GRE Tunnels"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "Port Filtering",
+                        "Parental Controls",
+                        "Port Forwarding"
+                    ],
+                    "category_name": "Security"
+                }
+            ],
+            "id": "e42d8a27-d896-4382-b3ab-d4a7c223bf30",
+            "deletedAt": null,
+            "createdAt": "2025-10-09T20:04:42.864048+00:00"
+        },
+        {
+            "email": "123s@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "WAN",
+                        "Ethernet"
+                    ],
+                    "category_name": "Network"
+                }
+            ],
+            "id": "dfce1bbe-2f9d-4430-a3a5-8c15cb2f6584",
+            "deletedAt": null,
+            "createdAt": "2025-10-09T20:03:21.904795+00:00"
+        },
+        {
+            "email": "abigalrani@gmail.com",
+            "categories": [
+                {
+                    "cards": [
+                        "WAN",
+                        "Network Map",
+                        "LAN",
+                        "GRE Tunnels",
+                        "Firewall",
+                        "Parental Controls",
+                        "Wi-Fi Analyzer",
+                        "Device logs"
+                    ],
+                    "category_name": "Network"
+                },
+                {
+                    "cards": [
+                        "Port Triggering",
+                        "Port Filtering",
+                        "Speed Test",
+                        "DMZ",
+                        "Wi-Fi"
+                    ],
+                    "category_name": "Security"
+                },
+                {
+                    "cards": [
+                        "Port Forwarding",
+                        "Back up & Restore",
+                        "Events & Alert history"
+                    ],
+                    "category_name": "Diagnostics"
+                },
+                {
+                    "cards": [
+                        "Local UI Password",
+                        "Wi-Fi Score",
+                        "Wi-Fi Diagnostics",
+                        "NTP Server"
+                    ],
+                    "category_name": "Troubleshooting"
+                },
+                {
+                    "cards": [
+                        "Device Diagnostics",
+                        "DOCSIS Statistics",
+                        "Firmware",
+                        "Advanced Services"
+                    ],
+                    "category_name": "Settings"
+                },
+                {
+                    "cards": [
+                        "Crash logs",
+                        "MAC Filtering",
+                        "Device Processes",
+                        "VPN",
+                        "Ethernet"
+                    ],
+                    "category_name": "Voice"
+                }
+            ],
+            "id": "7d63c427-c9c7-4b90-b80c-d5728b9c2323",
+            "deletedAt": null,
+            "createdAt": "2025-10-08T13:15:51.214114+00:00"
+        }
+    ]
+}
