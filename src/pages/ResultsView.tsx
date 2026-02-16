@@ -23,6 +23,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const [deletedResults, setDeletedResults] = useState<ResultWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
+  const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
 
   // Delete/Restore state
@@ -434,27 +435,91 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                   {expandedDate === date && (
                     <div className="divide-y divide-gray-100">
                       {items.map((result) => (
-                        <div key={result.id} className="p-4 hover:bg-gray-50 flex justify-between items-center group">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-                              {result.email.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{result.email}</div>
-                              <div className="text-xs text-gray-500">
-                                {result.categories.length} categories • {result.categories.reduce((acc, c) => acc + c.cards.length, 0)} cards sorted
+                        <div key={result.id} className="bg-white">
+                          {/* Submission Header - Clickable */}
+                          <div
+                            className="p-4 hover:bg-gray-50 flex justify-between items-center cursor-pointer group"
+                            onClick={() => setExpandedSubmission(expandedSubmission === result.id ? null : result.id)}
+                          >
+                            <div className="flex items-center gap-3 flex-1">
+                              <div className="h-10 w-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                                {result.email.charAt(0).toUpperCase()}
+                              </div>
+                              <div className="flex-1">
+                                <div className="font-medium text-gray-900">{result.email}</div>
+                                <div className="text-xs text-gray-500">
+                                  {result.categories.length} categories • {result.categories.reduce((acc, c) => acc + c.cards.length, 0)} cards sorted
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {expandedSubmission === result.id ? (
+                                  <ChevronUp size={20} className="text-gray-400" />
+                                ) : (
+                                  <ChevronDown size={20} className="text-gray-400" />
+                                )}
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Button variant="ghost" size="sm" onClick={() => downloadSingleJSON(result)} className="text-gray-400 hover:text-gray-700">
-                              <Download size={16} />
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(result.id)} className="text-gray-400 hover:text-red-600">
-                              <Trash2 size={16} />
-                            </Button>
-                          </div>
+                          {/* Expanded Category Breakdown */}
+                          {expandedSubmission === result.id && (
+                            <div className="px-4 pb-4 bg-gray-50/50">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                {result.categories.map((category, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
+                                  >
+                                    <h4 className="font-semibold text-gray-900 mb-3 text-sm">
+                                      {category.category_name}
+                                    </h4>
+                                    <ul className="space-y-1.5 mb-3">
+                                      {category.cards.map((card, cardIdx) => (
+                                        <li
+                                          key={cardIdx}
+                                          className="text-sm text-gray-600 flex items-start gap-2"
+                                        >
+                                          <span className="text-gray-400 mt-0.5">•</span>
+                                          <span>{card}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                    <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
+                                      {category.cards.length} {category.cards.length === 1 ? 'card' : 'cards'}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-2 pt-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    downloadSingleJSON(result);
+                                  }}
+                                  className="text-gray-600 hover:text-gray-900"
+                                >
+                                  <Download size={16} className="mr-1" />
+                                  Download
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteClick(result.id);
+                                  }}
+                                  className="text-gray-600 hover:text-red-600"
+                                >
+                                  <Trash2 size={16} className="mr-1" />
+                                  Delete
+                                </Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
