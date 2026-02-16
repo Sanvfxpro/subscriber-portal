@@ -102,6 +102,69 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
   // --- CALCULATION LOGIC ---
 
+  // Utility function for category agreement calculation
+  interface CategoryAgreementOptions<TSubmission, TCategory, TCard> {
+    submissions: TSubmission[];
+    categoryName: string;
+    getCategories: (submission: TSubmission) => TCategory[];
+    getCards: (category: TCategory) => TCard[];
+    getCategoryName: (category: TCategory) => string;
+    getCardId: (card: TCard) => string;
+  }
+
+  /**
+   * Calculate the percentage of cards that all users agreed to place in a specific category
+   * @returns Agreement percentage (0-100)
+   */
+  function calculateCategoryAgreement<TSubmission, TCategory, TCard>({
+    submissions,
+    categoryName,
+    getCategories,
+    getCards,
+    getCategoryName,
+    getCardId,
+  }: CategoryAgreementOptions<TSubmission, TCategory, TCard>): number {
+    if (submissions.length < 2) return 0;
+
+    // Get all unique cards across all submissions
+    const allCards = new Set<string>();
+    submissions.forEach((submission) => {
+      const categories = getCategories(submission);
+      categories.forEach((category) => {
+        const cards = getCards(category);
+        cards.forEach((card) => allCards.add(getCardId(card)));
+      });
+    });
+
+    if (allCards.size === 0) return 0;
+
+    // Count agreements for this category
+    let agreementCount = 0;
+
+    allCards.forEach((cardId) => {
+      // Check if all users placed this card in the same category
+      const placements = submissions.map((submission) => {
+        const categories = getCategories(submission);
+
+        // Find which category this card is in for this user
+        for (const category of categories) {
+          const cards = getCards(category);
+          if (cards.some((card) => getCardId(card) === cardId)) {
+            return getCategoryName(category);
+          }
+        }
+        return null;
+      });
+
+      // If all placements match and equal our target category, it's an agreement
+      if (placements.every((placement) => placement === categoryName)) {
+        agreementCount++;
+      }
+    });
+
+    return (agreementCount / allCards.size) * 100;
+  }
+
   // 1. Total Submissions
   const totalSubmissions = results.length;
   const projectStatus = project.deletedAt ? "Archived" : "Active";
@@ -114,26 +177,34 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const avgCardsSorted = totalSubmissions > 0 ? Math.round(totalCardsSorted / totalSubmissions) : 0;
 
   // 3. Category Agreement
-  // Count unique participants who used each category name
-  const categoryParticipants: Record<string, Set<string>> = {};
-
+  // Get all unique category names
+  const allCategoryNames = new Set<string>();
   results.forEach(result => {
     result.categories.forEach(category => {
-      if (!categoryParticipants[category.category_name]) {
-        categoryParticipants[category.category_name] = new Set();
-      }
-      categoryParticipants[category.category_name].add(result.email);
+      allCategoryNames.add(category.category_name);
     });
   });
 
-  const uniqueCategoriesCount = Object.keys(categoryParticipants).length;
+  const uniqueCategoriesCount = allCategoryNames.size;
 
-  const categoryAgreement = Object.entries(categoryParticipants)
-    .map(([name, participants]) => ({
-      name,
-      count: participants.size,
-      percentage: Math.round((participants.size / totalSubmissions) * 100)
-    }))
+  // Calculate agreement percentage for each category
+  const categoryAgreement = Array.from(allCategoryNames)
+    .map(categoryName => {
+      const agreementPercentage = calculateCategoryAgreement({
+        submissions: results,
+        categoryName,
+        getCategories: (submission) => submission.categories,
+        getCards: (category) => category.cards,
+        getCategoryName: (category) => category.category_name,
+        getCardId: (card) => card,
+      });
+
+      return {
+        name: categoryName,
+        percentage: Math.round(agreementPercentage),
+        count: results.filter(r => r.categories.some(c => c.category_name === categoryName)).length
+      };
+    })
     .sort((a, b) => b.percentage - a.percentage)
     .slice(0, 5); // Top 5
 
@@ -452,6 +523,16 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    downloadSingleJSON(result);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700"
+                                  title="Download JSON"
+                                >
+                                  <Download size={18} />
+                                </button>
                                 {expandedSubmission === result.id ? (
                                   <ChevronUp size={20} className="text-gray-400" />
                                 ) : (
