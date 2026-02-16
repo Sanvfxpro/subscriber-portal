@@ -5,7 +5,7 @@ import { UserProfile } from '../types';
 import { Button } from './Button';
 import { Input } from './Input';
 import { Modal } from './Modal';
-import { Search, Edit2, Trash2, UserPlus, Shield, User, X } from 'lucide-react';
+import { Search, Edit2, Trash2, UserPlus, Shield, User } from 'lucide-react';
 import { format } from 'date-fns';
 
 export const UserManagement: React.FC = () => {
@@ -90,37 +90,37 @@ export const UserManagement: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>User Management</h2>
-                <Button onClick={() => setShowAddModal(true)} icon={<UserPlus size={18} />}>
+                <Button onClick={() => setShowAddModal(true)}>
+                    <UserPlus size={18} className="mr-2" />
                     Add New User
                 </Button>
             </div>
 
-            <div className="flex items-center space-x-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center space-x-4 bg-gray-100 dark:bg-gray-100 p-4 rounded-lg shadow-sm border border-gray-200">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"
+                        className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
                         placeholder="Search users by email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        style={{ color: 'var(--color-text-primary)' }}
                     />
                 </div>
-                <div className="text-sm text-gray-500">
-                    Total Users: <span className="font-semibold text-gray-900 dark:text-gray-100">{users.length}</span>
+                <div className="text-sm text-gray-700">
+                    Total Users: <span className="font-semibold text-black">{users.length}</span>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div className="bg-gray-50 dark:bg-gray-50 rounded-lg shadow overflow-hidden border border-gray-200">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead className="bg-gray-50 dark:bg-gray-900">
+                        <thead className="bg-gray-200 dark:bg-gray-200">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined Date</th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">Email</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">Role</th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">Joined Date</th>
+                                <th scope="col" className="px-6 py-3 text-right text-xs font-bold text-black uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -134,27 +134,27 @@ export const UserManagement: React.FC = () => {
                                 </tr>
                             ) : (
                                 filteredUsers.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                                    <tr key={user.id} className="hover:bg-gray-100 dark:hover:bg-gray-200 transition-colors border-b border-gray-200">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-300">
                                                     <User size={16} />
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{user.email || 'No Email'}</div>
+                                                    <div className="text-sm font-medium text-black">{user.email || 'No Email'}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'admin'
-                                                    ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                 }`}>
                                                 {user.role === 'admin' ? <Shield size={12} className="mr-1 self-center" /> : null}
                                                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black">
                                             {user.created_at ? format(new Date(user.created_at), 'MMM dd, yyyy') : 'N/A'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
