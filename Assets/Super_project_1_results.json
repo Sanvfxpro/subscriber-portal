@@ -1,0 +1,109 @@
+{
+  "project": {
+    "project_id": 1759926496568,
+    "name": "Super project 1",
+    "type": "hybrid",
+    "cards": [
+      "Network Map",
+      "Wi-Fi",
+      "WAN",
+      "LAN",
+      "Ethernet",
+      "GRE Tunnels",
+      "Firewall",
+      "Parental Controls",
+      "Port Triggering",
+      "Port Filtering",
+      "Port Forwarding",
+      "MAC Filtering",
+      "DMZ",
+      "VPN",
+      "Local UI Password",
+      "Speed Test",
+      "Wi-Fi Analyzer",
+      "Wi-Fi Score",
+      "Wi-Fi Diagnostics",
+      "Device Diagnostics",
+      "Device logs",
+      "Crash logs",
+      "Events & Alert history",
+      "Device Processes",
+      "DOCSIS Statistics",
+      "Firmware",
+      "Back up & Restore",
+      "Advanced Services",
+      "NTP Server"
+    ],
+    "categories": [
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5"
+    ]
+  },
+  "results": [
+    {
+      "email": "adb6@gmail.com",
+      "categories": [
+        {
+          "cards": [
+            "Network Map",
+            "Wi-Fi",
+            "WAN",
+            "LAN",
+            "Firewall",
+            "Wi-Fi Diagnostics",
+            "Events & Alert history",
+            "NTP Server"
+          ],
+          "category_name": "h1"
+        },
+        {
+          "cards": [
+            "Ethernet",
+            "Wi-Fi Score",
+            "Device Processes",
+            "Firmware",
+            "Advanced Services"
+          ],
+          "category_name": "h2"
+        },
+        {
+          "cards": [
+            "Port Forwarding",
+            "Port Filtering",
+            "VPN",
+            "Port Triggering",
+            "Device logs",
+            "GRE Tunnels",
+            "MAC Filtering"
+          ],
+          "category_name": "h3"
+        },
+        {
+          "cards": [
+            "Parental Controls",
+            "DMZ",
+            "Local UI Password",
+            "Wi-Fi Analyzer",
+            "Back up & Restore"
+          ],
+          "category_name": "h4"
+        },
+        {
+          "cards": [
+            "Speed Test",
+            "Crash logs",
+            "Device Diagnostics",
+            "DOCSIS Statistics"
+          ],
+          "category_name": "h5"
+        }
+      ],
+      "id": "f2ddb344-ac54-46b0-b80b-258c0f00d4d9",
+      "deletedAt": null,
+      "createdAt": "2025-10-08T13:32:33.308546+00:00"
+    }
+  ]
+}

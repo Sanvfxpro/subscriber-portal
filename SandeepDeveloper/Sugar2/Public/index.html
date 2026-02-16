@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scroll Animation Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar"></div>
+
+    <!-- Scroll Container (Defines the total scroll height for the animation) -->
+    <div class="scroll-container">
+        
+        <!-- Sticky Wrapper (Pinned to viewport) -->
+        <div class="sticky-wrapper">
+            
+            <!-- Animation Canvas -->
+            <canvas id="hero-canvas"></canvas>
+            
+            <!-- Scroll Indicator -->
+            <div class="scroll-indicator">
+                <span>Scroll</span>
+                <div class="arrow">↓</div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Content Section (Revealed after exit) -->
+    <section class="content-section">
+        <div class="content-wrapper">
+            <h1 class="headline">
+                <span class="reveal-text">The Future</span><br>
+                <span class="reveal-text">is Weightless.</span>
+            </h1>
+            <p class="subtitle">
+                Experience the next generation of digital interaction. 
+                Smooth, responsive, and effortlessly immersive.
+            </p>
+            <a href="#" class="cta-button">Get Started</a>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>60fps</h3>
+                    <p>Silky Smooth</p>
+                </div>
+                <div class="stat-card">
+                    <h3>0ms</h3>
+                    <p>Input Latency</p>
+                </div>
+                <div class="stat-card">
+                    <h3>100%</h3>
+                    <p>Immersion</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spacer for footer/further scrolling if needed -->
+    <div style="height: 50vh; background: #050505;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
