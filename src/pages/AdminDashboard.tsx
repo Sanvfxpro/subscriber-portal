@@ -5,10 +5,11 @@ import { supabase } from '../lib/supabase';
 import { Modal } from '../components/Modal';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
-import { Plus, Settings, BarChart3, Trash2, Edit2, Pencil, Download, Share, CheckCircle2, Circle, LogOut, User, Users, Key, RefreshCw, RotateCcw, ChevronRight, ChevronDown, Copy, Upload, AlertTriangle, DatabaseBackup } from 'lucide-react';
-import { Project, SortType } from '../types';
+import { Plus, Settings, BarChart3, Trash2, Pencil, Download, Share, CheckCircle2, Circle, LogOut, User, Users, RefreshCw, RotateCcw, ChevronRight, ChevronDown, Copy, DatabaseBackup } from 'lucide-react';
+import { SortType } from '../types';
 import { Toast, ToastContainer, ToastType } from '../components/Toast';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { UserManagement } from '../components/UserManagement';
 import { RESTORED_PROJECTS } from '../data/restoredProjects';
 
 export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: string) => void }> = ({
@@ -31,14 +32,9 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [activeTab, setActiveTab] = useState<'projects' | 'users' | 'settings'>('projects');
   const [enableSignup, setEnableSignup] = useState(true);
-  const [loadingSettings, setLoadingSettings] = useState(false);
-  const [users, setUsers] = useState<Array<{ id: string; email: string; role: string; created_at: string }>>([]);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
-  const [resetPasswordUserId, setResetPasswordUserId] = useState<string | null>(null);
-  const [resetPasswordUserEmail, setResetPasswordUserEmail] = useState<string>('');
 
-  const [newPassword, setNewPassword] = useState('');
+  // Users state removed (moved to UserManagement component)
+  const [loadingSettings, setLoadingSettings] = useState(false);
   const [toasts, setToasts] = useState<Array<{ id: string; type: ToastType; message: string }>>([]);
 
   const addToast = (type: ToastType, message: string) => {
@@ -309,103 +305,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
     }
   };
 
-  const fetchUsers = async () => {
-    setLoadingUsers(true);
-    try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL} /functions/v1 / admin - users / list`;
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Authorization': `Bearer ${session?.access_token} `,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) throw new Error('Failed to fetch users');
-
-      const data = await response.json();
-      setUsers(data.users);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
-
-  const handleDeleteUser = async (userId: string, userEmail: string) => {
-    if (window.confirm(`Are you sure you want to delete user ${userEmail}? This action cannot be undone.`)) {
-      try {
-        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL} /functions/v1 / admin - users / delete/${userId}`;
-        const { data: { session } } = await supabase.auth.getSession();
-
-        const response = await fetch(apiUrl, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session?.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) throw new Error('Failed to delete user');
-
-        setUsers(users.filter(u => u.id !== userId));
-        alert('User deleted successfully');
-      } catch (error) {
-        console.error('Error deleting user:', error);
-        alert('Failed to delete user. Please try again.');
-      }
-    }
-  };
-
-  const handleOpenResetPassword = (userId: string, userEmail: string) => {
-    setResetPasswordUserId(userId);
-    setResetPasswordUserEmail(userEmail);
-    setNewPassword('');
-    setIsResetPasswordModalOpen(true);
-  };
-
-  const handleResetPassword = async () => {
-    if (!newPassword.trim()) {
-      alert('Please enter a new password.');
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      alert('Password must be at least 6 characters long.');
-      return;
-    }
-
-    if (!resetPasswordUserId) return;
-
-    try {
-      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-users/reset-password`;
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: resetPasswordUserId,
-          newPassword: newPassword,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to reset password');
-
-      alert(`Password successfully reset for ${resetPasswordUserEmail}`);
-      setIsResetPasswordModalOpen(false);
-      setResetPasswordUserId(null);
-      setResetPasswordUserEmail('');
-      setNewPassword('');
-    } catch (error) {
-      console.error('Error resetting password:', error);
-      alert('Failed to reset password. Please try again.');
-    }
-  };
+  // Legacy password reset and user fetch methods removed in favor of UserManagement component
 
   const fetchSettings = async () => {
     setLoadingSettings(true);
@@ -446,9 +346,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
   };
 
   React.useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    } else if (activeTab === 'settings') {
+    if (activeTab === 'settings') {
       fetchSettings();
     }
   }, [activeTab]);
@@ -804,454 +702,319 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
           </div>
         )}
 
-        {
-          activeTab === 'users' && (
-            <div>
-              {loadingUsers ? (
-                <Card className="p-12 text-center">
-                  <div className="text-lg" style={{ color: 'var(--color-text-secondary)' }}>
-                    Loading users...
-                  </div>
-                </Card>
-              ) : users.length === 0 ? (
-                <Card className="p-12 text-center">
-                  <div className="max-w-md mx-auto">
-                    <div className="mb-4">
-                      <Users size={48} className="mx-auto" style={{ color: 'var(--color-text-tertiary)' }} />
-                    </div>
-                    <h2 className="text-2xl font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                      No users yet
-                    </h2>
-                    <p style={{ color: 'var(--color-text-secondary)' }}>
-                      Users will appear here once they sign up
-                    </p>
-                  </div>
-                </Card>
+        {/* Users Tab */}
+        {activeTab === 'users' && (
+          <UserManagement />
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <div>
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--color-text-primary)' }}>
+                Application Settings
+              </h2>
+              {loadingSettings ? (
+                <div className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
+                  Loading settings...
+                </div>
               ) : (
-                <Card>
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid var(--color-border-primary)' }}>
-                          <th className="text-left p-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                            Email
-                          </th>
-                          <th className="text-left p-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                            Role
-                          </th>
-                          <th className="text-left p-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                            Sign Up Date
-                          </th>
-                          <th className="text-right p-4 font-semibold" style={{ color: 'var(--color-text-secondary)' }}>
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {users.map((user) => (
-                          <tr
-                            key={user.id}
-                            style={{ borderBottom: '1px solid var(--color-border-primary)' }}
-                            className="hover:bg-opacity-50 transition-colors"
-                          >
-                            <td className="p-4" style={{ color: 'var(--color-text-primary)' }}>
-                              {user.email}
-                            </td>
-                            <td className="p-4">
-                              <span
-                                className="inline-block px-3 py-1 rounded-full text-sm font-medium"
-                                style={{
-                                  backgroundColor: user.role === 'admin' ? 'var(--color-primary-50)' : 'var(--color-success-50)',
-                                  color: user.role === 'admin' ? 'var(--color-primary-600)' : 'var(--color-success-600)',
-                                }}
-                              >
-                                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                              </span>
-                            </td>
-                            <td className="p-4" style={{ color: 'var(--color-text-secondary)' }}>
-                              {new Date(user.created_at).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex gap-2 justify-end">
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => handleOpenResetPassword(user.id, user.email)}
-                                >
-                                  <Key size={16} />
-                                </Button>
-                                <Button
-                                  variant="danger"
-                                  size="sm"
-                                  onClick={() => handleDeleteUser(user.id, user.email)}
-                                >
-                                  <Trash2 size={16} />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
+                    <div>
+                      <h3 className="font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                        Enable Sign Up
+                      </h3>
+                      <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        Allow new users to create accounts on the landing page
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={enableSignup}
+                        onChange={(e) => updateSignupSetting(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
+                        style={{
+                          backgroundColor: enableSignup ? 'var(--color-primary-600)' : 'var(--color-neutral-300)',
+                        }}
+                      ></div>
+                    </label>
                   </div>
-                </Card>
+                </div>
               )}
-            </div>
-          )
-        }
+            </Card>
+          </div>
+        )}
 
-        {
-          activeTab === 'settings' && (
+        {/* Toast Container and Modals */}
+        <ToastContainer>
+          {toasts.map(toast => (
+            <Toast
+              key={toast.id}
+              id={toast.id}
+              type={toast.type}
+              message={toast.message}
+              onClose={removeToast}
+            />
+          ))}
+        </ToastContainer>
+
+        <ConfirmDialog
+          isOpen={!!projectToDelete}
+          onClose={() => setProjectToDelete(null)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Project"
+          message="Are you sure you want to move this project to the recycle bin? It can be restored later."
+          confirmText="Delete Project"
+          cancelText="Cancel"
+          variant="danger"
+        />
+
+        <ConfirmDialog
+          isOpen={!!projectToRestore}
+          onClose={() => setProjectToRestore(null)}
+          onConfirm={handleRestoreConfirm}
+          title="Restore Project"
+          message="Are you sure you want to restore this project?"
+          confirmText="Restore Project"
+          cancelText="Cancel"
+          variant="warning"
+        />
+
+        <ConfirmDialog
+          isOpen={!!projectToPermanentlyDelete}
+          onClose={() => setProjectToPermanentlyDelete(null)}
+          onConfirm={handlePermanentDeleteConfirm}
+          title="Permanently Delete Project"
+          message="Are you sure you want to permanently delete this project? This action CANNOT be undone."
+          confirmText="Delete Permanently"
+          cancelText="Cancel"
+          variant="danger"
+        />
+
+        <Modal
+          isOpen={isCreateModalOpen}
+          onClose={() => {
+            setIsCreateModalOpen(false);
+            setProjectName('');
+            setProjectDescription('');
+            setError('');
+          }}
+          title="Create New Project"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateProject}>Create Project</Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
             <div>
-              <Card className="p-6">
-                <h2 className="text-xl font-semibold mb-6" style={{ color: 'var(--color-text-primary)' }}>
-                  Application Settings
-                </h2>
-                {loadingSettings ? (
-                  <div className="text-center py-8" style={{ color: 'var(--color-text-secondary)' }}>
-                    Loading settings...
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 rounded-lg" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
-                      <div>
-                        <h3 className="font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
-                          Enable Sign Up
-                        </h3>
-                        <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                          Allow new users to create accounts on the landing page
-                        </p>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Manage access
+              </label>
+              <textarea
+                placeholder="Add a name, group, or email"
+                rows={1}
+                className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
+                style={{
+                  borderColor: 'var(--color-border-primary)',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  color: 'var(--color-text-primary)',
+                }}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+                Only these people can access this study.
+              </p>
+            </div>
+            <Input
+              label="Project Name"
+              value={projectName}
+              onChange={(e) => {
+                setProjectName(e.target.value);
+                setError('');
+              }}
+              placeholder="Enter project name"
+              error={error}
+            />
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Description (Optional)
+              </label>
+              <textarea
+                value={projectDescription}
+                onChange={(e) => setProjectDescription(e.target.value)}
+                placeholder="Enter project description"
+                rows={3}
+                className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
+                style={{
+                  borderColor: 'var(--color-border-primary)',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  color: 'var(--color-text-primary)',
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Sort Type
+              </label>
+              <div className="space-y-2">
+                {(['open', 'closed', 'hybrid'] as SortType[]).map((type) => (
+                  <label
+                    key={type}
+                    className="flex items-start p-3 rounded-lg border cursor-pointer transition-all"
+                    style={{
+                      borderColor: projectType === type ? 'var(--color-border-brand)' : 'var(--color-border-primary)',
+                      backgroundColor: projectType === type ? 'var(--color-primary-50)' : 'transparent',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="sortType"
+                      value={type}
+                      checked={projectType === type}
+                      onChange={(e) => setProjectType(e.target.value as SortType)}
+                      className="mt-1 mr-3"
+                    />
+                    <div>
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)} Sort
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={enableSignup}
-                          onChange={(e) => updateSignupSetting(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"
-                          style={{
-                            backgroundColor: enableSignup ? 'var(--color-primary-600)' : 'var(--color-neutral-300)',
-                          }}
-                        ></div>
-                      </label>
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        {type === 'open' && 'Participants create all categories'}
+                        {type === 'closed' && 'Participants use pre-defined categories only'}
+                        {type === 'hybrid' && 'Participants can use pre-defined or create new categories'}
+                      </div>
                     </div>
-                  </div>
-                )}
-              </Card>
-            </div>
-          )
-        }
-      </div >
-
-      <ToastContainer>
-        {toasts.map(toast => (
-          <Toast
-            key={toast.id}
-            id={toast.id}
-            type={toast.type}
-            message={toast.message}
-            onClose={removeToast}
-          />
-        ))}
-      </ToastContainer>
-
-      <ConfirmDialog
-        isOpen={!!projectToDelete}
-        onClose={() => setProjectToDelete(null)}
-        onConfirm={handleDeleteConfirm}
-        title="Delete Project"
-        message="Are you sure you want to move this project to the recycle bin? It can be restored later."
-        confirmText="Delete Project"
-        cancelText="Cancel"
-        variant="danger"
-      />
-
-      <ConfirmDialog
-        isOpen={!!projectToRestore}
-        onClose={() => setProjectToRestore(null)}
-        onConfirm={handleRestoreConfirm}
-        title="Restore Project"
-        message="Are you sure you want to restore this project?"
-        confirmText="Restore Project"
-        cancelText="Cancel"
-        variant="warning"
-      />
-
-      <ConfirmDialog
-        isOpen={!!projectToPermanentlyDelete}
-        onClose={() => setProjectToPermanentlyDelete(null)}
-        onConfirm={handlePermanentDeleteConfirm}
-        title="Permanently Delete Project"
-        message="Are you sure you want to permanently delete this project? This action CANNOT be undone."
-        confirmText="Delete Permanently"
-        cancelText="Cancel"
-        variant="danger"
-      />
-
-      <Modal
-        isOpen={isCreateModalOpen}
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          setProjectName('');
-          setProjectDescription('');
-          setError('');
-        }}
-        title="Create New Project"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setIsCreateModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateProject}>Create Project</Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Manage access
-            </label>
-            <textarea
-              placeholder="Add a name, group, or email"
-              rows={1}
-              className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
-              style={{
-                borderColor: 'var(--color-border-primary)',
-                backgroundColor: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
-              }}
-            />
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              Only these people can access this study.
-            </p>
-          </div>
-          <Input
-            label="Project Name"
-            value={projectName}
-            onChange={(e) => {
-              setProjectName(e.target.value);
-              setError('');
-            }}
-            placeholder="Enter project name"
-            error={error}
-          />
-
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Description (Optional)
-            </label>
-            <textarea
-              value={projectDescription}
-              onChange={(e) => setProjectDescription(e.target.value)}
-              placeholder="Enter project description"
-              rows={3}
-              className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
-              style={{
-                borderColor: 'var(--color-border-primary)',
-                backgroundColor: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
-              }}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Sort Type
-            </label>
-            <div className="space-y-2">
-              {(['open', 'closed', 'hybrid'] as SortType[]).map((type) => (
-                <label
-                  key={type}
-                  className="flex items-start p-3 rounded-lg border cursor-pointer transition-all"
-                  style={{
-                    borderColor: projectType === type ? 'var(--color-border-brand)' : 'var(--color-border-primary)',
-                    backgroundColor: projectType === type ? 'var(--color-primary-50)' : 'transparent',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="sortType"
-                    value={type}
-                    checked={projectType === type}
-                    onChange={(e) => setProjectType(e.target.value as SortType)}
-                    className="mt-1 mr-3"
-                  />
-                  <div>
-                    <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)} Sort
-                    </div>
-                    <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                      {type === 'open' && 'Participants create all categories'}
-                      {type === 'closed' && 'Participants use pre-defined categories only'}
-                      {type === 'hybrid' && 'Participants can use pre-defined or create new categories'}
-                    </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
 
-      <Modal
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setProjectName('');
-          setProjectDescription('');
-          setProjectType('hybrid');
-          setEditingProjectId(null);
-          setError('');
-        }}
-        title="Edit Project"
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => {
-              setIsEditModalOpen(false);
-              setProjectName('');
-              setProjectDescription('');
-              setProjectType('hybrid');
-              setEditingProjectId(null);
-              setError('');
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={handleUpdateProject}>Save Changes</Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Manage access
-            </label>
-            <textarea
-              placeholder="Add a name, group, or email"
-              rows={1}
-              className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
-              style={{
-                borderColor: 'var(--color-border-primary)',
-                backgroundColor: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
+        <Modal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setProjectName('');
+            setProjectDescription('');
+            setProjectType('hybrid');
+            setEditingProjectId(null);
+            setError('');
+          }}
+          title="Edit Project"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => {
+                setIsEditModalOpen(false);
+                setProjectName('');
+                setProjectDescription('');
+                setProjectType('hybrid');
+                setEditingProjectId(null);
+                setError('');
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleUpdateProject}>Save Changes</Button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Manage access
+              </label>
+              <textarea
+                placeholder="Add a name, group, or email"
+                rows={1}
+                className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
+                style={{
+                  borderColor: 'var(--color-border-primary)',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  color: 'var(--color-text-primary)',
+                }}
+              />
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
+                Only these people can access this study.
+              </p>
+            </div>
+            <Input
+              label="Project Name"
+              value={projectName}
+              onChange={(e) => {
+                setProjectName(e.target.value);
+                setError('');
               }}
+              placeholder="Enter project name"
+              error={error}
             />
-            <p className="text-xs mt-1" style={{ color: 'var(--color-text-tertiary)' }}>
-              Only these people can access this study.
-            </p>
-          </div>
-          <Input
-            label="Project Name"
-            value={projectName}
-            onChange={(e) => {
-              setProjectName(e.target.value);
-              setError('');
-            }}
-            placeholder="Enter project name"
-            error={error}
-          />
 
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Description (Optional)
-            </label>
-            <textarea
-              value={projectDescription}
-              onChange={(e) => setProjectDescription(e.target.value)}
-              placeholder="Enter project description"
-              rows={3}
-              className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
-              style={{
-                borderColor: 'var(--color-border-primary)',
-                backgroundColor: 'var(--color-bg-primary)',
-                color: 'var(--color-text-primary)',
-              }}
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Description (Optional)
+              </label>
+              <textarea
+                value={projectDescription}
+                onChange={(e) => setProjectDescription(e.target.value)}
+                placeholder="Enter project description"
+                rows={3}
+                className="w-full px-4 py-2 rounded-lg border transition-colors resize-none"
+                style={{
+                  borderColor: 'var(--color-border-primary)',
+                  backgroundColor: 'var(--color-bg-primary)',
+                  color: 'var(--color-text-primary)',
+                }}
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
-              Sort Type
-            </label>
-            <div className="space-y-2">
-              {(['open', 'closed', 'hybrid'] as SortType[]).map((type) => (
-                <label
-                  key={type}
-                  className="flex items-start p-3 rounded-lg border cursor-pointer transition-all"
-                  style={{
-                    borderColor: projectType === type ? 'var(--color-border-brand)' : 'var(--color-border-primary)',
-                    backgroundColor: projectType === type ? 'var(--color-primary-50)' : 'transparent',
-                  }}
-                >
-                  <input
-                    type="radio"
-                    name="editSortType"
-                    value={type}
-                    checked={projectType === type}
-                    onChange={(e) => setProjectType(e.target.value as SortType)}
-                    className="mt-1 mr-3"
-                  />
-                  <div>
-                    <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                      {type.charAt(0).toUpperCase() + type.slice(1)} Sort
+            <div>
+              <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                Sort Type
+              </label>
+              <div className="space-y-2">
+                {(['open', 'closed', 'hybrid'] as SortType[]).map((type) => (
+                  <label
+                    key={type}
+                    className="flex items-start p-3 rounded-lg border cursor-pointer transition-all"
+                    style={{
+                      borderColor: projectType === type ? 'var(--color-border-brand)' : 'var(--color-border-primary)',
+                      backgroundColor: projectType === type ? 'var(--color-primary-50)' : 'transparent',
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="editSortType"
+                      value={type}
+                      checked={projectType === type}
+                      onChange={(e) => setProjectType(e.target.value as SortType)}
+                      className="mt-1 mr-3"
+                    />
+                    <div>
+                      <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)} Sort
+                      </div>
+                      <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        {type === 'open' && 'Participants create all categories'}
+                        {type === 'closed' && 'Participants use pre-defined categories only'}
+                        {type === 'hybrid' && 'Participants can use pre-defined or create new categories'}
+                      </div>
                     </div>
-                    <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                      {type === 'open' && 'Participants create all categories'}
-                      {type === 'closed' && 'Participants use pre-defined categories only'}
-                      {type === 'hybrid' && 'Participants can use pre-defined or create new categories'}
-                    </div>
-                  </div>
-                </label>
-              ))}
+                  </label>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </Modal>
+        </Modal>
 
-      <Modal
-        isOpen={isResetPasswordModalOpen}
-        onClose={() => {
-          setIsResetPasswordModalOpen(false);
-          setResetPasswordUserId(null);
-          setResetPasswordUserEmail('');
-          setNewPassword('');
-        }}
-        title={`Reset Password for ${resetPasswordUserEmail}`}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setIsResetPasswordModalOpen(false);
-                setResetPasswordUserId(null);
-                setResetPasswordUserEmail('');
-                setNewPassword('');
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleResetPassword}>Reset Password</Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <Input
-            label="New Password"
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Enter new password (min 6 characters)"
-          />
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            The user will be able to log in with this new password immediately.
-          </p>
-        </div>
-      </Modal>
-
-    </div >
+      </div>
+    </div>
   );
 };

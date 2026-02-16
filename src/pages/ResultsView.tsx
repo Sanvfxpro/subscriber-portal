@@ -113,20 +113,25 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const avgCardsSorted = totalSubmissions > 0 ? Math.round(totalCardsSorted / totalSubmissions) : 0;
 
   // 3. Category Agreement
-  // Flatten all categories from all results
-  const allCategoriesFlat = results.flatMap(r => r.categories.map(c => c.category_name));
-  const uniqueCategoriesCount = new Set(allCategoriesFlat).size;
+  // Count unique participants who used each category name
+  const categoryParticipants: Record<string, Set<string>> = {};
 
-  const categoryFrequency: Record<string, number> = {};
-  allCategoriesFlat.forEach(cat => {
-    categoryFrequency[cat] = (categoryFrequency[cat] || 0) + 1;
+  results.forEach(result => {
+    result.categories.forEach(category => {
+      if (!categoryParticipants[category.category_name]) {
+        categoryParticipants[category.category_name] = new Set();
+      }
+      categoryParticipants[category.category_name].add(result.email);
+    });
   });
 
-  const categoryAgreement = Object.entries(categoryFrequency)
-    .map(([name, count]) => ({
+  const uniqueCategoriesCount = Object.keys(categoryParticipants).length;
+
+  const categoryAgreement = Object.entries(categoryParticipants)
+    .map(([name, participants]) => ({
       name,
-      count,
-      percentage: Math.round((count / totalSubmissions) * 100)
+      count: participants.size,
+      percentage: Math.round((participants.size / totalSubmissions) * 100)
     }))
     .sort((a, b) => b.percentage - a.percentage)
     .slice(0, 5); // Top 5
