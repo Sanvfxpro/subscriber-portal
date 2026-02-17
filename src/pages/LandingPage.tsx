@@ -38,17 +38,17 @@ export const LandingPage: React.FC<{
 
     useEffect(() => {
       const checkAuthStatus = async () => {
+        // synchronously capture URL params before async auth check
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectIdRaw = urlParams.get('project');
+
         const { data: { user } } = await supabase.auth.getUser();
         const isAuthenticated = !!user;
         setIsLoggedIn(isAuthenticated);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const projectId = urlParams.get('project');
-
-        if (projectId) {
-          onNavigate('participant', projectId);
-        } else if (isAuthenticated && !justLoggedOut) {
-          onNavigate('admin');
+        // Use captured param
+        if (projectIdRaw) {
+          onNavigate('participant', projectIdRaw);
         }
       };
 

@@ -626,6 +626,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .from('sorting_results')
         .select('*')
         .eq('project_id', projectId)
+        .eq('status', 'completed')
         .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
