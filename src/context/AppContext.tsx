@@ -57,11 +57,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (user) {
         // Fetch profile data to check for admin status
-        let { data: profileData, error: profileError } = await supabase
+        const profileResult = await supabase
           .from('user_profiles')
           .select('role')
           .eq('id', user.id)
           .maybeSingle();
+
+        let profileData = profileResult.data;
+        const profileError = profileResult.error;
 
         if (profileError) {
           console.error('Error fetching user profile:', profileError);

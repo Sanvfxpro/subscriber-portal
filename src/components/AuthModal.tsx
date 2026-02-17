@@ -21,6 +21,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   useEffect(() => {
     setIsSignUp(initialMode === 'signup');
@@ -83,8 +85,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
           onSuccess(data.user.id, email);
         }
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -98,7 +101,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
     setShowForgotPassword(false);
     setResetEmail('');
     setResetSent(false);
+    setResendSuccess(false);
+    setResendLoading(false);
     onClose();
+  };
+
+  const handleResendVerification = async () => {
+    setError('');
+    setResendLoading(true);
+    setResendSuccess(false);
+
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email,
+      });
+
+      if (error) throw error;
+      setResendSuccess(true);
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to resend confirmation email';
+      setError(errorMsg);
+    } finally {
+      setResendLoading(false);
+    }
   };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
@@ -112,8 +138,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
       if (error) throw error;
 
       setResetSent(true);
-    } catch (err: any) {
-      setError(err.message || 'Failed to send reset email');
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to send reset email';
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -189,7 +216,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
 
           {error && (
             <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-error-50)', color: 'var(--color-error-600)' }}>
-              {error}
+              <div className="flex flex-col gap-2">
+                <p>{error}</p>
+                {error.toLowerCase().includes('email not confirmed') && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resendLoading}
+                    className="text-xs font-semibold underline text-left hover:text-error-700 disabled:opacity-50"
+                  >
+                    {resendLoading ? 'Sending...' : 'Resend confirmation email?'}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {resendSuccess && (
+            <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-success-50)', color: 'var(--color-success-600)', fontSize: '0.875rem' }}>
+              Confirmation email resent! Please check your inbox.
             </div>
           )}
 
