@@ -50,21 +50,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [projects, setProjects] = useState<Project[]>([]);
   const [results, setResults] = useState<Record<string, ParticipantResult[]>>({});
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [isLoading, setIsLoading] = useState(true);
 
   const loadProjects = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (user) {
-        // Check if user is admin
-        const { data: profileData } = await supabase
+        // Fetch profile data to check for admin status
+        let { data: profileData, error: profileError } = await supabase
           .from('user_profiles')
           .select('role')
           .eq('id', user.id)
           .maybeSingle();
 
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+        }
+
+        // Auto-create profile if missing
+        if (!profileData && !profileError) {
+          console.log(`Profile missing for user ${user.email}, creating one...`);
+          const { data: newProfile, error: createError } = await supabase
+            .from('user_profiles')
+            .insert({ id: user.id, role: 'user' })
+            .select('role')
+            .single();
+
+          if (createError) {
+            console.error('Error creating user profile:', createError);
+          } else {
+            profileData = newProfile;
+            console.log('Profile created successfully.');
+          }
+        }
+
         const isAdmin = profileData?.role === 'admin';
+        console.log(`[DEBUG] User ${user.email} (ID: ${user.id}) loading projects. Role: ${profileData?.role || 'unknown'}, isAdmin: ${isAdmin}`);
 
         // Admin users get all projects, regular users get only their own
         let query = supabase
@@ -72,14 +93,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           .select('*');
 
         if (!isAdmin) {
+          console.log(`[DEBUG] Restricting query to user_id: ${user.id}`);
           query = query.eq('user_id', user.id);
+        } else {
+          console.log('[DEBUG] Admin detected, fetching all projects.');
         }
 
-        const { data, error } = await query.order('created_at', { ascending: false });
+        const { data, error: projectsError } = await query.order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Error loading projects:', error);
+        if (projectsError) {
+          console.error('Error loading projects from database:', projectsError);
+          setProjects([]);
         } else if (data) {
+          console.log(`[DEBUG] Successfully fetched ${data.length} projects.`);
           setProjects(data.map(row => ({
             id: row.id,
             name: row.name,
@@ -93,19 +119,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           })));
         }
       } else {
+        console.log('[DEBUG] No authenticated user found.');
         setProjects([]);
       }
     } catch (err) {
-      console.error('Error loading projects:', err);
-    } finally {
-      setIsLoading(false);
+      console.error('Unexpected error in loadProjects:', err);
+      setProjects([]);
     }
   };
 
   useEffect(() => {
     loadProjects();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         loadProjects();
       } else if (event === 'SIGNED_OUT') {

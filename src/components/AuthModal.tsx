@@ -41,10 +41,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         if (error) throw error;
 
         if (data.user) {
-          await supabase.from('user_profiles').insert({
-            id: data.user.id,
-            role: 'user',
-          });
+          // Trigger fallback: ensure profile exists
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          if (!profile) {
+            await supabase.from('user_profiles').insert({
+              id: data.user.id,
+              role: 'user',
+            });
+          }
 
           onSuccess(data.user.id, email);
         }
@@ -57,6 +66,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         if (error) throw error;
 
         if (data.user) {
+          // Check if profile exists, create if missing (for legacy users or manual creations)
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          if (!profile) {
+            await supabase.from('user_profiles').insert({
+              id: data.user.id,
+              role: 'user',
+            });
+          }
+
           onSuccess(data.user.id, email);
         }
       }
@@ -146,60 +169,60 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess
         </form>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Email Address"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="your.email@example.com"
-          required
-        />
-        <Input
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Enter your password"
-          required
-        />
+          <Input
+            label="Email Address"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="your.email@example.com"
+            required
+          />
+          <Input
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            required
+          />
 
 
-        {error && (
-          <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-error-50)', color: 'var(--color-error-600)' }}>
-            {error}
-          </div>
-        )}
+          {error && (
+            <div className="p-3 rounded-lg" style={{ backgroundColor: 'var(--color-error-50)', color: 'var(--color-error-600)' }}>
+              {error}
+            </div>
+          )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
-        </Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? 'Please wait...' : isSignUp ? 'Create Account' : 'Sign In'}
+          </Button>
 
-        {!isSignUp && (
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="text-sm transition-colors"
-              style={{ color: 'var(--color-primary-600)' }}
-            >
-              Forgot your password?
-            </button>
-          </div>
-        )}
+          {!isSignUp && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm transition-colors"
+                style={{ color: 'var(--color-primary-600)' }}
+              >
+                Forgot your password?
+              </button>
+            </div>
+          )}
 
-        {enableSignup && (
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm transition-colors"
-              style={{ color: 'var(--color-primary-600)' }}
-            >
-              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
-            </button>
-          </div>
-        )}
-      </form>
+          {enableSignup && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm transition-colors"
+                style={{ color: 'var(--color-primary-600)' }}
+              >
+                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+              </button>
+            </div>
+          )}
+        </form>
       )}
     </Modal>
   );
