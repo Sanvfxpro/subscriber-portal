@@ -274,7 +274,8 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
 
   const handleShareProject = async (projectId: string) => {
     const baseUrl = window.location.origin;
-    const shareUrl = `${baseUrl}?project=${projectId}`;
+    // Hardcode the sub-directory to guarantee correct links on GitHub Pages
+    const shareUrl = `${baseUrl}/subscriber-portal/?project=${projectId}`;
 
     try {
       await navigator.clipboard.writeText(shareUrl);
