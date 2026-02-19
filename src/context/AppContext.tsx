@@ -20,12 +20,12 @@ interface AppContextType {
   updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
   getProject: (id: string) => Project | undefined;
   fetchProjectById: (id: string) => Promise<Project | null>;
-  addCard: (projectId: string, content: string) => Promise<void>;
-  updateCard: (projectId: string, cardId: string, content: string) => Promise<void>;
+  addCard: (projectId: string, content: string, description?: string) => Promise<void>;
+  updateCard: (projectId: string, cardId: string, content: string, description?: string) => Promise<void>;
   deleteCard: (projectId: string, cardId: string) => Promise<void>;
   reorderCards: (projectId: string, cards: Card[]) => Promise<void>;
-  addCategory: (projectId: string, name: string) => Promise<void>;
-  updateCategory: (projectId: string, categoryId: string, name: string) => Promise<void>;
+  addCategory: (projectId: string, name: string, description?: string) => Promise<void>;
+  updateCategory: (projectId: string, categoryId: string, name: string, description?: string) => Promise<void>;
   deleteCategory: (projectId: string, categoryId: string) => Promise<void>;
   reorderCategories: (projectId: string, categories: Category[]) => Promise<void>;
   submitResult: (projectId: string, result: ParticipantResult) => Promise<void>;
@@ -164,35 +164,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const createProject = async (name: string, type: SortType, description?: string): Promise<Project> => {
     const defaultCards = [
-      'Network Map',
-      'Wi-Fi',
-      'WAN',
-      'LAN',
-      'Ethernet',
-      'GRE Tunnels',
-      'Firewall',
-      'Parental Controls',
-      'Port Triggering',
-      'Port Filtering',
-      'Port Forwarding',
-      'MAC Filtering',
-      'DMZ',
-      'VPN',
-      'Local UI Password',
-      'Speed Test',
-      'Wi-Fi Analyzer',
-      'Wi-Fi Score',
-      'Wi-Fi Diagnostics',
-      'Device Diagnostics',
-      'Device logs',
-      'Crash logs',
-      'Events & Alert history',
-      'Device Processes',
-      'DOCSIS Statistics',
-      'Firmware',
-      'Back up & Restore',
-      'Advanced Services',
-      'NTP Server',
+      { content: 'Network Status', description: 'See if your network is online and running normally.' },
+      { content: 'Network Speed', description: 'Check how fast your internet connection is.' },
+      { content: 'Network Map', description: 'View how your devices are connected to your network.' },
+      { content: 'Wi-Fi Networks', description: 'See the Wi-Fi networks your router is broadcasting.' },
+      { content: 'Wi-Fi Settings', description: 'Change your Wi-Fi name, password, and security options.' },
+      { content: 'Connected Devices', description: 'View all devices currently connected to your network.' },
+      { content: 'Down Time', description: 'See when your network was unavailable.' },
+      { content: 'Usage and Insights', description: 'Understand how your network is being used.' },
+      { content: 'Advanced Setting', description: 'Access advanced network configuration options.' },
+      { content: 'Alerts/Notifications', description: 'Get notified about network activity and issues.' },
+      { content: 'Add/Setup Gateway or Extender', description: 'Add a new gateway or extender to your network.' },
+      { content: 'MAC Filtering', description: 'Choose which devices are allowed to connect, based on their unique MAC addresses.' },
+      { content: 'Port Forwarding', description: 'Allow specific apps or devices to be accessed from the internet.' },
+      { content: 'Port Filtering', description: 'Control internet traffic by allowing or blocking specific ports.' },
+      { content: 'Port Triggering', description: 'Automatically open ports when a device needs them.' },
+      { content: 'Firewall', description: 'Protect your network from unwanted or suspicious traffic.' },
+      { content: 'Device Groups', description: 'Organize devices into groups for easier management.' },
+      { content: 'DNS Setting', description: 'Chooses how your network converts the human-friendly URL (e.g., wikipedia.org) into the numerical IP address necessary for your computer to find the website.' },
+      { content: 'Internet Configuration', description: 'Set up how your gateway connects to the internet.' },
+      { content: 'DHCP Reservations', description: 'Assign the same IP address to specific devices.' },
+      { content: 'DOCSIS Summary', description: 'View cable connection and signal details.' },
+      { content: 'Local Network', description: 'Manage settings for devices within your home network.' },
+      { content: 'Ethernet Configuration', description: 'Configure wired network connection settings.' },
+      { content: 'NTP Servers', description: 'Set time servers to keep your network time accurate.' },
+      { content: 'Static IP Automatic Assignment', description: 'Automatically assign fixed IP addresses to devices.' },
+      { content: 'Wi-Fi Configuration', description: 'Configure advanced Wi-Fi network options.' },
+      { content: 'Mesh', description: 'Manage and monitor your mesh Wi-Fi network.' },
+      { content: 'Local web UI Password', description: 'Change the password for accessing the local gateway interface.' },
+      { content: 'Backup and Restore', description: 'Save your settings or restore them from a backup.' },
+      { content: 'Speed test', description: 'Test your internet connection speed.' },
+      { content: 'SSID Scanner', description: 'Scan nearby Wi-Fi networks to check congestion and channels.' },
+      { content: 'Gateway Login', description: 'Access your gateway\'s management interface.' },
+      { content: 'Network Tool-box', description: 'Use network tools to diagnose connection issues.' },
+      { content: 'Factory Reset', description: 'Reset the gateway to its original settings.' },
+      { content: 'Content Filtering', description: 'Block or allow access to specific websites or content.' },
+      { content: 'Reboot', description: 'Restart the gateway to refresh the connection.' },
+      { content: 'Test Connection', description: 'Check if your gateway is properly connected to the internet.' },
+      { content: 'DMZ', description: 'Expose one device directly to the internet.' },
+      { content: 'Device Alias', description: 'Rename devices to make them easier to identify.' },
+      { content: 'Manage Users', description: 'Add, remove, or manage access for users.' },
+      { content: 'Support', description: 'Get help, guides, or contact customer support.' },
+      { content: 'Multi-Language', description: 'Change the language used in the app.' },
+      { content: 'Theme Light/Dark', description: 'Switch between light and dark display themes.' },
+      { content: 'Switch Account', description: 'Change to a different user account.' },
+      { content: 'Switch Gateway', description: 'View or manage a different gateway.' }
     ];
 
     const defaultCategories = [
@@ -209,9 +225,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       name,
       description,
       type,
-      cards: defaultCards.map((content, index) => ({
+      cards: defaultCards.map((card, index) => ({
         id: (index + 1).toString(),
-        content,
+        content: card.content,
+        description: card.description,
         sortOrder: index,
       })),
       categories: type === 'closed' || type === 'hybrid'
@@ -439,13 +456,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addCard = async (projectId: string, content: string) => {
+  const addCard = async (projectId: string, content: string, description?: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
     const newCard: Card = {
       id: Date.now().toString(),
       content,
+      description,
       sortOrder: project.cards.length,
     };
     const updatedCards = [...project.cards, newCard];
@@ -453,11 +471,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateProject(projectId, { cards: updatedCards });
   };
 
-  const updateCard = async (projectId: string, cardId: string, content: string) => {
+  const updateCard = async (projectId: string, cardId: string, content: string, description?: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    const updatedCards = project.cards.map(c => c.id === cardId ? { ...c, content } : c);
+    const updatedCards = project.cards.map(c => c.id === cardId ? { ...c, content, description } : c);
     await updateProject(projectId, { cards: updatedCards });
   };
 
@@ -473,13 +491,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateProject(projectId, { cards });
   };
 
-  const addCategory = async (projectId: string, name: string) => {
+  const addCategory = async (projectId: string, name: string, description?: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
     const newCategory: Category = {
       id: Date.now().toString(),
       name,
+      description,
       sortOrder: project.categories.length,
     };
     const updatedCategories = [...project.categories, newCategory];
@@ -487,11 +506,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateProject(projectId, { categories: updatedCategories });
   };
 
-  const updateCategory = async (projectId: string, categoryId: string, name: string) => {
+  const updateCategory = async (projectId: string, categoryId: string, name: string, description?: string) => {
     const project = projects.find(p => p.id === projectId);
     if (!project) return;
 
-    const updatedCategories = project.categories.map(c => c.id === categoryId ? { ...c, name } : c);
+    const updatedCategories = project.categories.map(c => c.id === categoryId ? { ...c, name, description } : c);
     await updateProject(projectId, { categories: updatedCategories });
   };
 

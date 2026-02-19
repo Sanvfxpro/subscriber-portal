@@ -20,7 +20,10 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
   const [editingCard, setEditingCard] = useState<CardType | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [cardContent, setCardContent] = useState('');
+  const [cardDescription, setCardDescription] = useState('');
+
   const [categoryName, setCategoryName] = useState('');
+  const [categoryDescription, setCategoryDescription] = useState('');
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
   if (!project) {
@@ -31,12 +34,13 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
     if (!cardContent.trim()) return;
 
     if (editingCard) {
-      await updateCard(projectId, editingCard.id, cardContent.trim());
+      await updateCard(projectId, editingCard.id, cardContent.trim(), cardDescription.trim() || undefined);
     } else {
-      await addCard(projectId, cardContent.trim());
+      await addCard(projectId, cardContent.trim(), cardDescription.trim() || undefined);
     }
 
     setCardContent('');
+    setCardDescription('');
     setEditingCard(null);
     setIsCardModalOpen(false);
   };
@@ -45,12 +49,13 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
     if (!categoryName.trim()) return;
 
     if (editingCategory) {
-      await updateCategory(projectId, editingCategory.id, categoryName.trim());
+      await updateCategory(projectId, editingCategory.id, categoryName.trim(), categoryDescription.trim() || undefined);
     } else {
-      await addCategory(projectId, categoryName.trim());
+      await addCategory(projectId, categoryName.trim(), categoryDescription.trim() || undefined);
     }
 
     setCategoryName('');
+    setCategoryDescription('');
     setEditingCategory(null);
     setIsCategoryModalOpen(false);
   };
@@ -58,14 +63,18 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
   const handleEditCard = (card: CardType) => {
     setEditingCard(card);
     setCardContent(card.content);
+    setCardDescription(card.description || '');
     setIsCardModalOpen(true);
   };
 
   const handleEditCategory = (category: Category) => {
     setEditingCategory(category);
     setCategoryName(category.name);
+    setCategoryDescription(category.description || '');
     setIsCategoryModalOpen(true);
   };
+
+  // ... (drag handlers unchanged) ... 
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -101,6 +110,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
   return (
     <div className="min-h-screen p-8" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
       <div className="max-w-4xl mx-auto">
+        {/* ... (Header and Tabs unchanged) ... */}
         <div className="mb-6">
           <Button variant="ghost" onClick={() => onNavigate('admin')} className="mb-4">
             <ArrowLeft size={20} className="mr-2" />
@@ -146,10 +156,12 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
               if (activeTab === 'cards' || activeTab === 'import-cards') {
                 setEditingCard(null);
                 setCardContent('');
+                setCardDescription('');
                 setIsCardModalOpen(true);
               } else {
                 setEditingCategory(null);
                 setCategoryName('');
+                setCategoryDescription('');
                 setIsCategoryModalOpen(true);
               }
             }}
@@ -157,6 +169,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
             <Plus size={20} className="mr-2" />
             Add {activeTab === 'cards' || activeTab === 'import-cards' ? 'Card' : 'Category'}
           </Button>
+          {/* ... (Import buttons unchanged) ... */}
           {(activeTab === 'cards' || activeTab === 'import-cards') && (
             <Button
               variant="secondary"
@@ -181,6 +194,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
 
         <Card className="p-6">
           {activeTab === 'cards' || activeTab === 'import-cards' ? (
+            // ... (Cards render logic unchanged) ...
             activeTab === 'import-cards' ? (
               <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>
                 <div className="flex justify-center mb-4">
@@ -236,6 +250,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
               )
             )
           ) : activeTab === 'import-categories' ? (
+            // ... (Import categories unchanged) ...
             <div className="text-center py-12" style={{ color: 'var(--color-text-secondary)' }}>
               <div className="flex justify-center mb-4">
                 <Upload size={48} className="opacity-50" />
@@ -298,6 +313,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
           setIsCardModalOpen(false);
           setEditingCard(null);
           setCardContent('');
+          setCardDescription('');
         }}
         title={editingCard ? 'Edit Card' : 'Add Card'}
         footer={
@@ -310,12 +326,30 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
         }
       >
         <Input
-          label="Card Content"
+          label="Card Name"
           value={cardContent}
           onChange={(e) => setCardContent(e.target.value)}
-          placeholder="Enter card content"
+          placeholder="Enter card name"
           autoFocus
         />
+        <div className="mt-4">
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+            Description (Optional)
+          </label>
+          <textarea
+            className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-primary)',
+              color: 'var(--color-text-primary)',
+            }}
+            rows={3}
+            value={cardDescription}
+            onChange={(e) => setCardDescription(e.target.value)}
+            placeholder="Enter card description..."
+          />
+        </div>
+
       </Modal>
 
       <Modal
@@ -324,6 +358,7 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
           setIsCategoryModalOpen(false);
           setEditingCategory(null);
           setCategoryName('');
+          setCategoryDescription('');
         }}
         title={editingCategory ? 'Edit Category' : 'Add Category'}
         footer={
@@ -342,6 +377,23 @@ export const ManageProject: React.FC<{ projectId: string; onNavigate: (page: str
           placeholder="Enter category name"
           autoFocus
         />
+        <div className="mt-4">
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+            Description (Optional)
+          </label>
+          <textarea
+            className="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            style={{
+              backgroundColor: 'var(--color-bg-primary)',
+              borderColor: 'var(--color-border-primary)',
+              color: 'var(--color-text-primary)',
+            }}
+            rows={3}
+            value={categoryDescription}
+            onChange={(e) => setCategoryDescription(e.target.value)}
+            placeholder="Enter category description..."
+          />
+        </div>
       </Modal>
     </div >
   );

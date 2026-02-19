@@ -3,8 +3,9 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
+import { ProjectCard } from '../components/ProjectCard'; // Import the new component
 import { Modal } from '../components/Modal';
-import { Plus, Trash2, Pencil, Check, ArrowLeft, Save, AlertTriangle, RotateCcw, Sparkles, Info } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, ArrowLeft, Save, AlertTriangle, RotateCcw, Info } from 'lucide-react';
 import { ResultCategory, ParticipantResult } from '../types';
 import loginBg from '../assets/login-bg.jpg';
 
@@ -13,6 +14,7 @@ interface ParticipantCategory extends ResultCategory {
   id: string;        // Unique ID for React keys and tracking
   originalName?: string; // Original name for admin defaults
   isDefault: boolean;    // Whether it is an admin-defined category
+  description?: string;
 }
 
 export const ParticipantView: React.FC<{ projectId: string; onComplete: () => void; onNavigate: (page: string) => void }> = ({
@@ -27,6 +29,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   const [email, setEmail] = useState('');
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [introAcknowledged, setIntroAcknowledged] = useState(false);
 
   const [unsortedCards, setUnsortedCards] = useState<string[]>([]);
   // Use extended interface for local state
@@ -49,6 +52,12 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
 
   // Limit only applies to Hybrid mode as per requirements
   const isLimitReached = project?.type === 'hybrid' && userCategories.length >= 5;
+
+  const getCardDescription = (content: string) => {
+    return project?.cards.find(c => c.content === content)?.description;
+  };
+
+
 
   useEffect(() => {
     const loadProject = async () => {
@@ -75,7 +84,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
           cards: [],
           id: c.id || c.name, // Use ID if available, else name
           originalName: c.name,
-          isDefault: true
+          isDefault: true,
+          description: c.description
         }));
         setUserCategories(initialCategories);
       }
@@ -132,7 +142,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                 ...draftCat,
                 id: projCat.id || projCat.name,
                 originalName: projCat.name,
-                isDefault: true
+                isDefault: true,
+                description: projCat.description
               });
             } else {
               // New default category added by admin
@@ -141,7 +152,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                 cards: [],
                 id: projCat.id || projCat.name,
                 originalName: projCat.name,
-                isDefault: true
+                isDefault: true,
+                description: projCat.description
               });
             }
           });
@@ -220,8 +232,11 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
 
   // Inline Editing Logic
   const startEditing = (category: ParticipantCategory) => {
-    // Determine if renaming is allowed. Only 'closed' sorts strictly forbid renaming.
+    // Determine if renaming is allowed.
+    // 1. Closed sorts strictly forbid renaming.
+    // 2. Hybrid sorts forbid renaming default (admin-created) categories.
     if (project.type === 'closed') return;
+    if (project.type === 'hybrid' && category.isDefault) return;
 
     setEditingCategoryId(category.id);
     setEditName(category.category_name);
@@ -412,11 +427,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
           backgroundColor: 'var(--color-bg-secondary)'
         }}
       >
-        <div className="absolute top-8 left-8">
-          <Button onClick={() => onNavigate('landing')} variant="secondary" size="sm">
-            <ArrowLeft size={20} />
-          </Button>
-        </div>
+
         <Card className="p-8 w-full max-w-md">
           <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
             {project.name}
@@ -437,6 +448,89 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
               error={emailError}
             />
             <Button onClick={handleEmailSubmit} className="w-full">
+              Start Sorting
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!introAcknowledged) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-8 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${loginBg})`,
+          backgroundColor: 'var(--color-bg-secondary)'
+        }}
+      >
+        <div className="absolute top-8 left-8">
+          <Button onClick={() => setEmailSubmitted(false)} variant="secondary" size="sm">
+            <ArrowLeft size={20} />
+          </Button>
+        </div>
+        <Card className="p-8 w-full max-w-4xl">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+              Welcome to the Card Sorting Study for Gravity's Subscriber App.
+            </h1>
+            <p className="text-base max-w-2xl mx-auto" style={{ color: '#6B7280' }}>
+              This activity is being conducted to understand how you as an end-user,
+              understand the app's information and naturally organise it in a way that
+              makes sense to you.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div className="instruction-column">
+              <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
+                How to sort in this activity -
+              </h3>
+              <ol className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
+                  <span className="leading-relaxed">Go through the list of cards on the left section of the screen</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">2</span>
+                  <span className="leading-relaxed">Drag and drop cards into categories (on the centre section) that make most sense to you</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">3</span>
+                  <span className="leading-relaxed">Create a new category if you think it's needed, and name that category. You can choose to edit or delete this category.</span>
+                </li>
+              </ol>
+            </div>
+
+            <div className="instruction-column">
+              <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
+                Things to keep in mind -
+              </h3>
+              <ul className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
+                <li className="flex items-start gap-3">
+                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
+                  <span className="leading-relaxed">There are no right or wrong answers, only answers that are logical to you</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
+                  <span className="leading-relaxed">Place cards in category groups, based on where you would EXPECT to find them in the app</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
+                  <span className="leading-relaxed">Take as much time as you need!</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setIntroAcknowledged(true)}
+              size="lg"
+              className="px-12 py-3 text-lg font-medium min-w-[160px]"
+              style={{ backgroundColor: '#2563EB', color: 'white' }}
+            >
               Start Sorting
             </Button>
           </div>
@@ -513,17 +607,48 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
 
 
 
-        <div className="flex gap-6">
+        <div className="flex justify-center mb-0">
+          {/* Dynamic Banners for Hybrid Mode - Below Instructions */}
+          {project.type === 'hybrid' && (
+            <div className="w-full max-w-3xl flex justify-center">
+              {/* Info Banner - Less than 5 categories */}
+              {!isLimitReached && (
+                <div
+                  className="w-fit flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 text-sm"
+                >
+                  <Info size={16} className="flex-shrink-0" />
+                  <span className="truncate">
+                    <strong>Category Limit Guide:</strong> Min 4, Max 5 acting categories.
+                  </span>
+                </div>
+              )}
+
+              {/* Warning Banner - Limit Reached (5 categories) */}
+              {isLimitReached && (
+                <div
+                  className="w-fit flex items-center gap-2 px-3 py-2 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 text-sm"
+                >
+                  <AlertTriangle size={16} className="flex-shrink-0" />
+                  <span className="truncate">
+                    <strong>Limit reached (5/5)</strong> - You can edit the latest category name, or suggest alternative names to other categories
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex gap-6 mt-[15px]">
           <div className="w-80 flex-shrink-0">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-6 flex items-center gap-3">
               <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
                 Unsorted Cards
               </h2>
               <span
-                className="px-3 py-1 rounded-full text-sm font-medium"
+                className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium leading-none"
                 style={{
                   backgroundColor: unsortedCards.length === 0 ? 'var(--color-success-50)' : 'var(--color-warning-50)',
-                  color: unsortedCards.length === 0 ? 'var(--color-success-600)' : 'var(--color-warning-600)',
+                  color: unsortedCards.length === 0 ? 'var(--color-success-700)' : 'var(--color-warning-700)',
                 }}
               >
                 {unsortedCards.length} remaining
@@ -549,19 +674,13 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
               ) : (
                 <div className="space-y-2">
                   {unsortedCards.map((card, index) => (
-                    <div
+                    <ProjectCard
                       key={index}
-                      draggable
+                      content={card}
+                      description={getCardDescription(card)}
                       onDragStart={() => handleDragStart(card)}
-                      className="p-3 rounded-lg border cursor-move transition-all hover:shadow-md"
-                      style={{
-                        backgroundColor: 'var(--color-bg-secondary)',
-                        borderColor: 'var(--color-border-primary)',
-                        color: 'var(--color-text-primary)',
-                      }}
-                    >
-                      {card}
-                    </div>
+                      className="border" // Add specific styling if needed, or rely on default
+                    />
                   ))}
                 </div>
               )}
@@ -570,11 +689,10 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
 
 
           <div className="flex-1">
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+            <div className="mb-6 flex items-center gap-4">
+              <h2 className="text-xl font-semibold flex-shrink-0" style={{ color: 'var(--color-text-primary)' }}>
                 Categories
               </h2>
-              {/* Top-right input removed in favor of the 'Add Category' slot */}
             </div>
 
             <div className="flex flex-wrap gap-4">
@@ -613,7 +731,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                       </div>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                           <h3
                             className="font-semibold truncate cursor-pointer hover:underline decoration-dashed underline-offset-4"
                             style={{ color: 'var(--color-text-primary)' }}
@@ -622,6 +740,16 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                           >
                             {category.category_name}
                           </h3>
+                          {category.description && (
+                            <div className="group relative flex items-center">
+                              <Info size={14} className="text-blue-400 cursor-help" />
+                              <div className="invisible group-hover:visible absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 text-xs rounded shadow-lg z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                style={{ backgroundColor: 'var(--color-neutral-800)', color: 'white' }}>
+                                {category.description}
+                                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45" style={{ backgroundColor: 'var(--color-neutral-800)' }}></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-[2px] flex-shrink-0">
@@ -638,7 +766,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                           )}
 
                           {/* Pencil Icon for Renaming - Neutral Gray */}
-                          {project.type !== 'closed' && (
+                          {/* Show if NOT closed AND (NOT hybrid OR (hybrid AND not default)) */}
+                          {project.type !== 'closed' && !(project.type === 'hybrid' && category.isDefault) && (
                             <button
                               onClick={() => startEditing(category)}
                               className="p-1 hover:opacity-75 transition-opacity"
@@ -649,8 +778,14 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                             </button>
                           )}
 
-                          {/* Allow delete if Hybrid mode (any category) OR if custom category (not Closed mode) */}
-                          {(project.type === 'hybrid' || (!category.isDefault && project.type !== 'closed')) && (
+                          {/* Allow delete if Hybrid mode (custom category only) OR if Open/Hybrid custom category */}
+                          {/* Logic:
+                              - Closed: No delete (handled by !isDefault && type!=closed check, but effectively no delete for closed usually)
+                              - Open: Delete any (usually they are all 'custom' in a way, or if default exists, might be valid to delete? Req says "User created".
+                                but legacy logic was: (!category.isDefault && project.type !== 'closed')
+                              - Hybrid: Only delete if NOT default.
+                           */}
+                          {(!category.isDefault && project.type !== 'closed') && (
                             <button
                               onClick={() => confirmDeleteCategory(category.id)}
                               className="p-1 hover:opacity-75 transition-opacity"
@@ -664,6 +799,24 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                     )}
                   </div>
 
+                  {/* Suggestion Input - Between Title and Card Count */}
+                  <input
+                    type="text"
+                    placeholder="Suggest category name..."
+                    className="w-full text-xs px-2 py-1 border rounded bg-white/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 transition-colors mb-2"
+                    style={{
+                      borderColor: 'var(--color-border-secondary)',
+                      color: 'var(--color-text-primary)'
+                    }}
+                    value={category.suggested_name || ''}
+                    onChange={(e) => {
+                      const newVal = e.target.value;
+                      setUserCategories(prev => prev.map(c =>
+                        c.id === category.id ? { ...c, suggested_name: newVal } : c
+                      ));
+                    }}
+                  />
+
                   <div
                     className="text-xs text-center mb-2 px-2 py-1 rounded"
                     style={{
@@ -675,10 +828,12 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                   </div>
 
                   <div
-                    className="min-h-[120px] flex-1 p-2 rounded-lg border-2 border-dashed transition-all"
+                    className={`min-h-[120px] flex-1 p-2 rounded-lg border-2 border-dashed transition-all ${category.cards.length > 3 ? 'scrollable' : ''}`}
                     style={{
                       backgroundColor: 'var(--color-bg-secondary)',
                       borderColor: 'var(--color-border-secondary)',
+                      maxHeight: category.cards.length > 3 ? '240px' : 'auto',
+                      overflowY: category.cards.length > 3 ? 'auto' : 'visible'
                     }}
                     onDrop={(e) => handleDrop(e, category.id)}
                     onDragOver={handleDragOver}
@@ -691,23 +846,19 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                     ) : (
                       <div className="space-y-2">
                         {category.cards.map((card, index) => (
-                          <div
+                          <ProjectCard
                             key={index}
-                            draggable
+                            content={card}
+                            description={getCardDescription(card)}
                             onDragStart={() => handleDragStart(card, category.id)}
-                            className="p-2 rounded border cursor-move transition-all hover:shadow-sm text-sm"
-                            style={{
-                              backgroundColor: 'var(--color-bg-primary)',
-                              borderColor: 'var(--color-border-primary)',
-                              color: 'var(--color-text-primary)',
-                            }}
-                          >
-                            {card}
-                          </div>
+                            className="bg-white"
+                          />
                         ))}
                       </div>
                     )}
                   </div>
+
+
                 </div>
               ))}
 
@@ -716,9 +867,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                 <div
                   className="w-64 p-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-4 transition-all group relative bg-blue-50 border-blue-200"
                 >
-                  <div className="absolute top-3 right-3 text-blue-500">
-                    <Sparkles size={20} />
-                  </div>
+
 
                   <div className="text-center mt-2">
                     <h3 className="text-blue-800 font-bold text-lg">Create New Column</h3>
@@ -744,36 +893,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
               )}
             </div>
 
-            {/* Dynamic Banners for Hybrid Mode - Positioned AFTER categories */}
-            {project.type === 'hybrid' && (
-              <>
-                {/* Info Banner - Less than 5 categories */}
-                {!isLimitReached && (
-                  <div
-                    className="mt-6 mb-4 p-4 rounded-lg flex items-start gap-3 w-fit bg-blue-50 border border-blue-200 text-blue-800"
-                  >
-                    <Info size={20} className="mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-bold">Category Limit Guide</h3>
-                      <p className="text-sm mt-1">You can have a minimum of 4 and a maximum of 5 categories.</p>
-                    </div>
-                  </div>
-                )}
 
-                {/* Warning Banner - Limit Reached (5 categories) */}
-                {isLimitReached && (
-                  <div
-                    className="mt-6 mb-4 p-4 rounded-lg flex items-start gap-3 w-fit bg-yellow-50 border border-yellow-200 text-yellow-800"
-                  >
-                    <AlertTriangle size={20} className="mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h3 className="font-bold">Category Limit Guide</h3>
-                      <p className="text-sm mt-1">Maximum capacity reached (5/5). To create a new one, you must first delete an existing column.</p>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -802,6 +922,6 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
         </div>
       </Modal>
 
-    </div>
+    </div >
   );
 };

@@ -3,12 +3,14 @@ export type SortType = 'open' | 'closed' | 'hybrid';
 export interface Card {
   id: string;
   content: string;
+  description?: string;
   sortOrder: number;
 }
 
 export interface Category {
   id: string;
   name: string;
+  description?: string;
   sortOrder: number;
 }
 
@@ -26,6 +28,7 @@ export interface Project {
 
 export interface ResultCategory {
   category_name: string;
+  suggested_name?: string;
   cards: string[];
 }
 

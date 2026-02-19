@@ -95,7 +95,20 @@ export const AdminDashboard: React.FC<{ onNavigate: (page: string, projectId?: s
           .maybeSingle();
 
         if (existing) {
-          console.log(`Skipping ${oldProject.name}, already exists.`);
+          console.log(`Updating cards for existing project: ${oldProject.name}`);
+          // Update the cards to ensure descriptions are applied
+          const { error: updateError } = await supabase
+            .from('projects')
+            .update({
+              cards: oldProject.cards
+            })
+            .eq('id', existing.id);
+
+          if (updateError) {
+            console.error('Failed to update project cards:', updateError);
+          } else {
+            successCount++;
+          }
           continue;
         }
 

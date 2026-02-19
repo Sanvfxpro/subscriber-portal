@@ -8,7 +8,7 @@ If you close the project and need to open it again:
 
 1.  **Open Terminal**: Navigate to the project folder.
     ```bash
-    cd /Users/sat/Desktop/Antigravity/Subscriber-portal
+    cd /Users/sat/Desktop/Antigravity/subscriber-portal
     ```
 2.  **Start Development Server**:
     ```bash
