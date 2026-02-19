@@ -83,7 +83,12 @@ export const LandingPage: React.FC<{
         const isAuthenticated = !!session;
         setIsLoggedIn(isAuthenticated);
 
-        if (event === 'SIGNED_IN' && isAuthenticated) {
+        // Check for project param to prioritize participant flow
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectIdRaw = urlParams.get('project');
+        const skipRedirect = urlParams.get('skip_redirect') === 'true';
+
+        if (event === 'SIGNED_IN' && isAuthenticated && !projectIdRaw && !skipRedirect) {
           onNavigate('admin');
         }
       });
