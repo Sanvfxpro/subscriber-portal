@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { ArrowLeft, Download, Trash2, Copy, Trophy, TrendingUp, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, Copy, Trophy, TrendingUp, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder, MessageSquare } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { ProjectResults, ParticipantResult } from '../types';
 
@@ -541,6 +541,20 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                  {/* Comment indicator */}
+                                  {(result as any).additional_comments?.trim() ? (
+                                    <div
+                                      className="flex items-center justify-center w-7 h-7 rounded-md"
+                                      style={{ backgroundColor: '#EFF6FF', color: '#3B82F6' }}
+                                      title={`Comment: ${(result as any).additional_comments}`}
+                                    >
+                                      <MessageSquare size={15} />
+                                    </div>
+                                  ) : (
+                                    <div className="flex items-center justify-center w-7 h-7" style={{ color: '#D1D5DB' }}>
+                                      <MessageSquare size={15} />
+                                    </div>
+                                  )}
                                   <button
                                     onClick={(e) => { e.stopPropagation(); downloadSingleJSON(result); }}
                                     className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700"
@@ -588,6 +602,15 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                                     <Trash2 size={16} className="mr-1" /> Delete
                                   </Button>
                                 </div>
+                                {(result as any).additional_comments?.trim() && (
+                                  <div className="mt-4 p-3 rounded-lg border border-blue-100 bg-blue-50">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                      <MessageSquare size={14} className="text-blue-500" />
+                                      <span className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Participant Comment</span>
+                                    </div>
+                                    <p className="text-sm text-blue-900">{(result as any).additional_comments}</p>
+                                  </div>
+                                )}
                               </div>
                             )}
                           </div>
