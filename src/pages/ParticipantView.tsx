@@ -474,7 +474,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
         <Card className="p-8 w-full max-w-4xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
-              Welcome to the Card Sorting Study for Gravity's Subscriber App.
+              Welcome to the Card Sorting Activity for Gravity's Subscriber App.
             </h1>
             <p className="text-base max-w-2xl mx-auto" style={{ color: '#6B7280' }}>
               This activity is being conducted to understand how you as an end-user,
@@ -486,32 +486,32 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             <div className="instruction-column">
               <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-                How to sort in this activity -
+                Instructions for this activity -
               </h3>
               <ol className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
-                  <span className="leading-relaxed">Go through the list of cards on the left section of the screen</span>
+                  <span className="leading-relaxed">Go through the list of cards on the left section</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">2</span>
-                  <span className="leading-relaxed">Drag and drop cards into categories (on the centre section) that make most sense to you</span>
+                  <span className="leading-relaxed">Drag and drop cards into categories that make most sense to you</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">3</span>
-                  <span className="leading-relaxed">Create a new category if you think it's needed, and name that category. You can choose to edit or delete this category.</span>
+                  <span className="leading-relaxed">Create a new category if needed, and name that category. You can edit or delete this category.</span>
                 </li>
               </ol>
             </div>
 
             <div className="instruction-column">
               <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-                Things to keep in mind -
+                Remember -
               </h3>
               <ul className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
                 <li className="flex items-start gap-3">
                   <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
-                  <span className="leading-relaxed">There are no right or wrong answers, only answers that are logical to you</span>
+                  <span className="leading-relaxed">There are no right or wrong answers, only answers that are logical to you!</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
