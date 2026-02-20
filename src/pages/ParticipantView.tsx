@@ -49,6 +49,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   const [showTooltip, setShowTooltip] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [additionalComments, setAdditionalComments] = useState('');
 
   // Limit only applies to Hybrid mode as per requirements
   const isLimitReached = project?.type === 'hybrid' && userCategories.length >= 5;
@@ -338,7 +340,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   };
 
   // Data Clean-up helper for submission
-  const getCleanResults = (): ParticipantResult => ({
+  const getCleanResults = (comments?: string): ParticipantResult => ({
     email,
     categories: userCategories
       .filter(cat => cat.cards.length > 0)
@@ -346,7 +348,8 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
         category_name: cat.category_name,
         ...(cat.suggested_name?.trim() ? { suggested_name: cat.suggested_name.trim() } : {}),
         cards: cat.cards
-      }))
+      })),
+    ...(comments?.trim() ? { additional_comments: comments.trim() } : {})
   });
 
   const saveProgress = async () => {
@@ -369,14 +372,13 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
     }
   };
 
-  const submitSorting = async () => {
+  const submitSorting = async (comments: string) => {
     setIsPublishing(true);
     try {
-      // For final submission, we strip metadata to match the strict schema expectation
-      submitResult(projectId, getCleanResults());
+      submitResult(projectId, getCleanResults(comments));
       setIsPublished(true);
-      showToast('Sorting published. Thank you!');
-
+      setShowSubmitModal(false);
+      showToast('Sorting submitted. Thank you!');
       setTimeout(() => {
         onComplete();
       }, 2000);
@@ -407,9 +409,10 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
     }, 3000);
   };
 
-  const handlePublish = () => {
+  const handleSubmitClick = () => {
     if (canPublish) {
-      submitSorting();
+      setAdditionalComments('');
+      setShowSubmitModal(true);
     }
   };
 
@@ -556,7 +559,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
               onMouseLeave={() => setShowTooltip(false)}
             >
               <Button
-                onClick={handlePublish}
+                onClick={handleSubmitClick}
                 disabled={!canPublish || isPublishing || isPublished}
                 size="sm"
                 style={{
@@ -565,7 +568,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                   cursor: !canPublish || isPublished ? 'not-allowed' : 'pointer',
                 }}
               >
-                {isPublishing ? 'Publishing...' : isPublished ? 'Published' : 'Publish'}
+                {isPublished ? 'Submitted' : 'Submit'}
               </Button>
               {showTooltip && !canPublish && (
                 <div
@@ -575,7 +578,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                     color: 'white',
                   }}
                 >
-                  Finish sorting all cards to publish — {remaining} remaining
+                  Finish sorting all cards to submit — {remaining} remaining
                 </div>
               )}
             </div>
@@ -909,6 +912,74 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
         </div>
       </Modal>
 
+      {/* Submit Confirmation Modal */}
+      {showSubmitModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setShowSubmitModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-10 w-full max-w-lg shadow-2xl"
+            style={{ animation: 'slideUp 0.25s ease' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: '#D1FAE5' }}>
+              <Check size={32} style={{ color: '#10B981' }} />
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-semibold text-center mb-3" style={{ color: '#111827' }}>
+              Ready to Submit Your Sorting?
+            </h2>
+
+            {/* Description */}
+            <p className="text-center text-sm mb-8" style={{ color: '#6B7280', lineHeight: '1.6' }}>
+              Your card sorting will be submitted and cannot be edited after submission.
+            </p>
+
+            {/* Comments */}
+            <div className="mb-8">
+              <label className="block text-sm font-semibold mb-2" style={{ color: '#374151' }}>
+                Additional Comments <span className="font-normal" style={{ color: '#9CA3AF' }}>(Optional)</span>
+              </label>
+              <textarea
+                className="w-full rounded-lg border px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-300 transition"
+                style={{ borderColor: '#D1D5DB', color: '#111827', fontFamily: 'inherit', lineHeight: '1.5' }}
+                placeholder="Share any thoughts, suggestions, or feedback about the sorting experience..."
+                rows={4}
+                maxLength={500}
+                value={additionalComments}
+                onChange={(e) => setAdditionalComments(e.target.value)}
+              />
+              <div className="text-xs text-right mt-1" style={{ color: '#9CA3AF' }}>
+                {additionalComments.length}/500
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="secondary"
+                onClick={() => { setShowSubmitModal(false); setAdditionalComments(''); }}
+                disabled={isPublishing}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => submitSorting(additionalComments)}
+                disabled={isPublishing}
+                style={{ backgroundColor: '#10B981', color: 'white' }}
+              >
+                {isPublishing ? 'Submitting...' : 'Submit Sorting'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div >
+
   );
 };

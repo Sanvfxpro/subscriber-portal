@@ -35,6 +35,7 @@ export interface ResultCategory {
 export interface ParticipantResult {
   email: string;
   categories: ResultCategory[];
+  additional_comments?: string;
 }
 
 export interface ProjectResults {
