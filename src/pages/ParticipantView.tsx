@@ -471,58 +471,39 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
             <ArrowLeft size={20} />
           </Button>
         </div>
-        <Card className="p-8 w-full max-w-4xl">
+        <Card className="p-8 w-full max-w-2xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
               Welcome to the Card Sorting Activity for Gravity's Subscriber App.
             </h1>
-            <p className="text-base max-w-2xl mx-auto" style={{ color: '#6B7280' }}>
+            <p className="text-base" style={{ color: '#6B7280' }}>
               This activity is being conducted to understand how you as an end-user,
               understand the app's information and naturally organise it in a way that
               makes sense to you.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div className="instruction-column">
-              <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-                Instructions for this activity -
-              </h3>
-              <ol className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
-                  <span className="leading-relaxed">Go through the list of cards on the left section</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">2</span>
-                  <span className="leading-relaxed">Drag and drop cards into categories that make most sense to you</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">3</span>
-                  <span className="leading-relaxed">Create a new category if needed, and name that category. You can edit or delete this category.</span>
-                </li>
-              </ol>
-            </div>
-
-            <div className="instruction-column">
-              <h3 className="text-lg font-bold mb-3" style={{ color: 'var(--color-text-primary)' }}>
-                Remember -
-              </h3>
-              <ul className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
-                <li className="flex items-start gap-3">
-                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
-                  <span className="leading-relaxed">There are no right or wrong answers, only answers that are logical to you!</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
-                  <span className="leading-relaxed">Place cards in category groups, based on where you would EXPECT to find them in the app</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <Check size={20} className="text-green-500 mt-1 flex-shrink-0" />
-                  <span className="leading-relaxed">Take as much time as you need!</span>
-                </li>
-              </ul>
-            </div>
+          <div className="mb-8">
+            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
+              Instructions for this activity -
+            </h3>
+            <ol className="space-y-4 mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
+                <span className="leading-relaxed">Go through the list of cards on the left section</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">2</span>
+                <span className="leading-relaxed">Drag and drop cards into categories that make most sense to you</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">3</span>
+                <span className="leading-relaxed">Create a new category if needed, and name that category. You can edit or delete this category.</span>
+              </li>
+            </ol>
+            <p className="text-base font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+              <span style={{ color: 'var(--color-text-primary)' }}>Remember</span> - there are no right or wrong answers, only answers that are logical to you!
+            </p>
           </div>
 
           <div className="flex justify-center">
