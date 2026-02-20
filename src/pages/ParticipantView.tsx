@@ -293,7 +293,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
 
   /* Deprecated helpers removed: canDeleteCategory, canRenameCategory */
 
-  const handleDragStart = (card: string, fromCategoryId?: string) => {
+  const handleDragStart = (card: string) => {
     setDraggedCard(card);
   };
 
@@ -344,6 +344,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
       .filter(cat => cat.cards.length > 0)
       .map(cat => ({
         category_name: cat.category_name,
+        ...(cat.suggested_name?.trim() ? { suggested_name: cat.suggested_name.trim() } : {}),
         cards: cat.cards
       }))
   });
@@ -799,23 +800,25 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                     )}
                   </div>
 
-                  {/* Suggestion Input - Between Title and Card Count */}
-                  <input
-                    type="text"
-                    placeholder="Suggest category name..."
-                    className="w-full text-xs px-2 py-1 border rounded bg-white/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 transition-colors mb-2"
-                    style={{
-                      borderColor: 'var(--color-border-secondary)',
-                      color: 'var(--color-text-primary)'
-                    }}
-                    value={category.suggested_name || ''}
-                    onChange={(e) => {
-                      const newVal = e.target.value;
-                      setUserCategories(prev => prev.map(c =>
-                        c.id === category.id ? { ...c, suggested_name: newVal } : c
-                      ));
-                    }}
-                  />
+                  {/* Suggestion Input - Only for Default Categories (Admin created) */}
+                  {category.isDefault && (
+                    <input
+                      type="text"
+                      placeholder="Suggest category name..."
+                      className="w-full text-xs px-2 py-1 border rounded bg-white/50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-300 transition-colors mb-2"
+                      style={{
+                        borderColor: 'var(--color-border-secondary)',
+                        color: 'var(--color-text-primary)'
+                      }}
+                      value={category.suggested_name || ''}
+                      onChange={(e) => {
+                        const newVal = e.target.value;
+                        setUserCategories(prev => prev.map(c =>
+                          c.id === category.id ? { ...c, suggested_name: newVal } : c
+                        ));
+                      }}
+                    />
+                  )}
 
                   <div
                     className="text-xs text-center mb-2 px-2 py-1 rounded"
@@ -850,7 +853,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                             key={index}
                             content={card}
                             description={getCardDescription(card)}
-                            onDragStart={() => handleDragStart(card, category.id)}
+                            onDragStart={() => handleDragStart(card)}
                             className="bg-white"
                           />
                         ))}

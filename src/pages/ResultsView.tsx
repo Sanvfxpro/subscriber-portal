@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { ArrowLeft, Download, Trash2, Copy, Trophy, TrendingUp, Calendar, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, Copy, Trophy, TrendingUp, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import { ProjectResults, ParticipantResult } from '../types';
 
@@ -25,6 +25,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'categories'>('overview');
 
   // Delete/Restore state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -101,8 +102,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   };
 
   // --- CALCULATION LOGIC ---
-
-  // Utility function for category agreement calculation
   interface CategoryAgreementOptions<TSubmission, TCategory, TCard> {
     submissions: TSubmission[];
     categoryName: string;
@@ -112,10 +111,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
     getCardId: (card: TCard) => string;
   }
 
-  /**
-   * Calculate the percentage of cards that all users agreed to place in a specific category
-   * @returns Agreement percentage (0-100)
-   */
   function calculateCategoryAgreement<TSubmission, TCategory, TCard>({
     submissions,
     categoryName,
@@ -126,7 +121,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   }: CategoryAgreementOptions<TSubmission, TCategory, TCard>): number {
     if (submissions.length < 2) return 0;
 
-    // Get all unique cards across all submissions
     const allCards = new Set<string>();
     submissions.forEach((submission) => {
       const categories = getCategories(submission);
@@ -138,15 +132,11 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
     if (allCards.size === 0) return 0;
 
-    // Count agreements for this category
     let agreementCount = 0;
 
     allCards.forEach((cardId) => {
-      // Check if all users placed this card in the same category
       const placements = submissions.map((submission) => {
         const categories = getCategories(submission);
-
-        // Find which category this card is in for this user
         for (const category of categories) {
           const cards = getCards(category);
           if (cards.some((card) => getCardId(card) === cardId)) {
@@ -156,7 +146,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
         return null;
       });
 
-      // If all placements match and equal our target category, it's an agreement
       if (placements.every((placement) => placement === categoryName)) {
         agreementCount++;
       }
@@ -177,7 +166,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const avgCardsSorted = totalSubmissions > 0 ? Math.round(totalCardsSorted / totalSubmissions) : 0;
 
   // 3. Category Agreement
-  // Get all unique category names
   const allCategoryNames = new Set<string>();
   results.forEach(result => {
     result.categories.forEach(category => {
@@ -187,7 +175,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
   const uniqueCategoriesCount = allCategoryNames.size;
 
-  // Calculate agreement percentage for each category
   const categoryAgreement = Array.from(allCategoryNames)
     .map(categoryName => {
       const agreementPercentage = calculateCategoryAgreement({
@@ -206,9 +193,9 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
       };
     })
     .sort((a, b) => b.percentage - a.percentage)
-    .slice(0, 5); // Top 5
+    .slice(0, 5);
 
-  // 4. Submission Velocity (Last 5 Active Days)
+  // 4. Submission Velocity
   const submissionsByDate: Record<string, number> = {};
   results.forEach(r => {
     const date = r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : 'Unknown';
@@ -216,8 +203,8 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   });
 
   const submissionVelocityData = Object.entries(submissionsByDate)
-    .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime()) // Sort chronological
-    .slice(-5) // Last 5 days
+    .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+    .slice(-5)
     .map(([date, count]) => ({
       day: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
       count
@@ -238,6 +225,20 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
     return acc;
   }, {} as Record<string, ResultWithId[]>);
 
+  // 6. Categories Tab — cards grouped by category with participant counts
+  const categoryCardMap: Record<string, { cardCounts: Record<string, number>; participantCount: number }> = {};
+  results.forEach(result => {
+    result.categories.forEach(cat => {
+      if (!categoryCardMap[cat.category_name]) {
+        categoryCardMap[cat.category_name] = { cardCounts: {}, participantCount: 0 };
+      }
+      categoryCardMap[cat.category_name].participantCount++;
+      cat.cards.forEach(card => {
+        categoryCardMap[cat.category_name].cardCounts[card] =
+          (categoryCardMap[cat.category_name].cardCounts[card] || 0) + 1;
+      });
+    });
+  });
 
   // --- HELPERS ---
   const copyToClipboard = () => {
@@ -278,349 +279,387 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50/50">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
 
-        {/* 1. Header Section */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      {/* ── TOP HEADER ── */}
+      <div
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-8 py-5 border-b"
+        style={{ backgroundColor: 'var(--color-bg-primary)', borderColor: 'var(--color-border-primary)' }}
+      >
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={() => onNavigate('admin')} className="-ml-2 text-gray-500 hover:text-gray-900">
+            <ArrowLeft size={16} className="mr-1" /> Back
+          </Button>
           <div>
-            <Button variant="ghost" onClick={() => onNavigate('admin')} className="mb-2 -ml-2 text-gray-500 hover:text-gray-900">
-              <ArrowLeft size={16} className="mr-1" /> Back
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900">Results: {project.name}</h1>
-            <p className="text-gray-500 mt-1">View and export participant sorting results</p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant={showRecycleBin ? "primary" : "secondary"}
-              onClick={() => setShowRecycleBin(!showRecycleBin)}
-              className={showRecycleBin ? "bg-gray-800 text-white hover:bg-gray-700" : ""}
-            >
-              <Trash2 size={16} className="mr-2" />
-              Recycle Bin ({deletedResults.length})
-            </Button>
-
-            <Button variant="secondary" onClick={copyToClipboard}>
-              <Copy size={16} className="mr-2" />
-              Copy to Clipboard
-            </Button>
-            <Button variant="primary" onClick={downloadJSON}>
-              <Download size={16} className="mr-2" />
-              Download JSON
-            </Button>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
+              Results: {project.name}
+            </h1>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              View and export participant sorting results
+            </p>
           </div>
         </div>
 
-        {showRecycleBin ? (
-          <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-300">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                <Trash2 className="text-red-500" size={20} />
-                Recycle Bin
-              </h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowRecycleBin(false)}>Close Bin</Button>
-            </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            variant={showRecycleBin ? "primary" : "secondary"}
+            onClick={() => { setShowRecycleBin(!showRecycleBin); setActiveTab('overview'); }}
+            className={showRecycleBin ? "bg-gray-800 text-white hover:bg-gray-700" : ""}
+          >
+            <Trash2 size={16} className="mr-2" />
+            Recycle Bin ({deletedResults.length})
+          </Button>
+          <Button variant="secondary" onClick={copyToClipboard}>
+            <Copy size={16} className="mr-2" />
+            Copy to Clipboard
+          </Button>
+          <Button variant="primary" onClick={downloadJSON}>
+            <Download size={16} className="mr-2" />
+            Download JSON
+          </Button>
+        </div>
+      </div>
 
-            {deletedResults.length === 0 && (
-              <div className="text-center py-10 bg-gray-100 rounded-lg text-gray-400">
-                Recycle bin is empty.
+      {/* ── SIDEBAR + CONTENT ── */}
+      <div className="flex flex-1">
+
+        {/* Left Sidebar */}
+        <aside
+          className="w-56 flex-shrink-0 border-r py-6"
+          style={{ backgroundColor: 'var(--color-bg-primary)', borderColor: 'var(--color-border-primary)' }}
+        >
+          <nav className="flex flex-col gap-1 px-3">
+            <button
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-left transition-colors ${activeTab === 'overview' && !showRecycleBin
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+              onClick={() => { setActiveTab('overview'); setShowRecycleBin(false); }}
+            >
+              <BarChart3 size={18} />
+              Overview
+            </button>
+            <button
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-left transition-colors ${activeTab === 'categories' && !showRecycleBin
+                ? 'bg-blue-50 text-blue-600'
+                : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+              onClick={() => { setActiveTab('categories'); setShowRecycleBin(false); }}
+            >
+              <Folder size={18} />
+              Categories
+            </button>
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto p-8">
+
+          {/* ── RECYCLE BIN (overlay over tab content) ── */}
+          {showRecycleBin ? (
+            <div className="space-y-4 max-w-4xl">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                  <Trash2 className="text-red-500" size={20} />
+                  Recycle Bin
+                </h2>
+                <Button variant="ghost" size="sm" onClick={() => setShowRecycleBin(false)}>Close Bin</Button>
               </div>
-            )}
 
-            {Object.entries(groupedDeletedResults).map(([date, items]) => (
-              <div key={date} className="border border-red-100 rounded-lg bg-red-50/30 overflow-hidden">
-                <div
-                  className="flex items-center justify-between p-4 cursor-pointer hover:bg-red-50 transition-colors"
-                  onClick={() => setExpandedDeletedDate(expandedDeletedDate === date ? null : date)}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-medium text-gray-900">{date}</span>
-                    <span className="text-sm text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{items.length} deleted</span>
-                  </div>
-                  {expandedDeletedDate === date ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+              {deletedResults.length === 0 && (
+                <div className="text-center py-10 bg-gray-100 rounded-lg text-gray-400">
+                  Recycle bin is empty.
                 </div>
+              )}
 
-                {expandedDeletedDate === date && (
-                  <div className="divide-y divide-red-100 border-t border-red-100">
-                    {items.map((result) => (
-                      <div key={result.id} className="p-4 flex justify-between items-center bg-white/50">
-                        <div>
-                          <div className="font-medium text-gray-900">{result.email}</div>
-                          <div className="text-xs text-gray-500">Deleted: {result.deletedAt ? new Date(result.deletedAt).toLocaleDateString() : 'Unknown'}</div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleRestore(result.id)} className="text-green-600 hover:text-green-700 hover:bg-green-50">
-                            <RotateCcw size={16} className="mr-1" /> Restore
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handlePermanentDeleteClick(result.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                            <Trash2 size={16} className="mr-1" /> Delete Forever
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <>
-            {/* 2. Summary Statistics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Total Submissions */}
-              <Card className="p-6 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium mb-1">Total Submissions</p>
-                    <div className="text-4xl font-bold text-gray-900">{totalSubmissions}</div>
-                  </div>
-                  <div className={`px-2 py-1 rounded text-xs font-semibold ${projectStatus === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                    {projectStatus}
-                  </div>
-                </div>
-              </Card>
-
-              {/* Total Categories */}
-              <Card className="p-6 border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-shadow">
-                <div>
-                  <p className="text-gray-500 text-sm font-medium mb-1">Total Unique Categories</p>
-                  <div className="text-4xl font-bold text-gray-900 mb-2">{uniqueCategoriesCount}</div>
-                  <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                    <div className="h-full bg-indigo-500 rounded-full" style={{ width: '75%' }}></div>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">Across all participants</p>
-                </div>
-              </Card>
-
-              {/* Avg Cards Sorted */}
-              <Card className="p-6 border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-gray-500 text-sm font-medium mb-1">Avg. Cards Sorted</p>
-                    <div className="text-4xl font-bold text-gray-900">{avgCardsSorted}</div>
-                    <p className="text-xs text-gray-400 mt-1">cards per participant</p>
-                  </div>
-                  <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                    <Calendar size={20} />
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-              {/* 3. Top Categories Agreement */}
-              <Card className="p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-6">
-                  <Trophy className="text-yellow-500" size={20} />
-                  <h2 className="text-lg font-bold text-gray-900">Top Categories Agreement</h2>
-                </div>
-
-                <div className="space-y-6">
-                  {categoryAgreement.map((cat, idx) => (
-                    <div key={cat.name}>
-                      <div className="flex justify-between text-sm font-medium mb-2">
-                        <span className="text-gray-700">{cat.name}</span>
-                        <span className="text-gray-500">
-                          {cat.percentage}% <span className="text-gray-400 font-normal">({cat.count})</span>
-                        </span>
-                      </div>
-                      <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full bg-gradient-to-r ${getGradientBar(idx)} transform origin-left transition-all duration-1000 ease-out`}
-                          style={{ width: `${cat.percentage}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  {categoryAgreement.length === 0 && <p className="text-gray-400 text-sm italic">No data yet.</p>}
-                </div>
-              </Card>
-
-              {/* 4. Submission Velocity Chart */}
-              <Card className="p-6 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <TrendingUp className="text-blue-500" size={20} />
-                  <h2 className="text-lg font-bold text-gray-900">Submission Velocity</h2>
-                </div>
-                <p className="text-sm text-gray-500 mb-6">Activity over the last 5 active days</p>
-
-                <div className="h-[250px] w-full">
-                  {submissionVelocityData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={submissionVelocityData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                        <XAxis
-                          dataKey="day"
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                          dy={10}
-                        />
-                        <YAxis
-                          axisLine={false}
-                          tickLine={false}
-                          tick={{ fill: '#9CA3AF', fontSize: 12 }}
-                        />
-                        <RechartsTooltip
-                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
-                        />
-                        <Line
-                          type="monotone"
-                          dataKey="count"
-                          stroke="#8B5CF6"
-                          strokeWidth={3}
-                          dot={{ r: 4, fill: '#8B5CF6', strokeWidth: 2, stroke: '#fff' }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="h-full flex items-center justify-center text-gray-400 text-sm">No activity recorded</div>
-                  )}
-                </div>
-              </Card>
-            </div>
-
-            {/* 5. Participant Submissions Timeline */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-gray-900">Participant Submissions</h2>
-
-              {Object.entries(groupedResults).reverse().map(([date, items]) => (
-                <div key={date} className="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+              {Object.entries(groupedDeletedResults).map(([date, items]) => (
+                <div key={date} className="border border-red-100 rounded-lg bg-red-50/30 overflow-hidden">
                   <div
-                    className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => setExpandedDate(expandedDate === date ? null : date)}
+                    className="flex items-center justify-between p-4 cursor-pointer hover:bg-red-50 transition-colors"
+                    onClick={() => setExpandedDeletedDate(expandedDeletedDate === date ? null : date)}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="bg-blue-100 p-1.5 rounded text-blue-600">
-                        <Calendar size={16} />
-                      </div>
                       <span className="font-medium text-gray-900">{date}</span>
-                      <span className="text-sm text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{items.length}</span>
+                      <span className="text-sm text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{items.length} deleted</span>
                     </div>
-                    {expandedDate === date ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                    {expandedDeletedDate === date ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
                   </div>
 
-                  {expandedDate === date && (
-                    <div className="divide-y divide-gray-100">
+                  {expandedDeletedDate === date && (
+                    <div className="divide-y divide-red-100 border-t border-red-100">
                       {items.map((result) => (
-                        <div key={result.id} className="bg-white">
-                          {/* Submission Header - Clickable */}
-                          <div
-                            className="p-4 hover:bg-gray-50 flex justify-between items-center cursor-pointer group"
-                            onClick={() => setExpandedSubmission(expandedSubmission === result.id ? null : result.id)}
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div className="h-10 w-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
-                                {result.email.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="flex-1">
-                                <div className="font-medium text-gray-900">{result.email}</div>
-                                <div className="text-xs text-gray-500">
-                                  {result.categories.length} categories • {result.categories.reduce((acc, c) => acc + c.cards.length, 0)} cards sorted
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadSingleJSON(result);
-                                  }}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700"
-                                  title="Download JSON"
-                                >
-                                  <Download size={18} />
-                                </button>
-                                {expandedSubmission === result.id ? (
-                                  <ChevronUp size={20} className="text-gray-400" />
-                                ) : (
-                                  <ChevronDown size={20} className="text-gray-400" />
-                                )}
-                              </div>
-                            </div>
+                        <div key={result.id} className="p-4 flex justify-between items-center bg-white/50">
+                          <div>
+                            <div className="font-medium text-gray-900">{result.email}</div>
+                            <div className="text-xs text-gray-500">Deleted: {result.deletedAt ? new Date(result.deletedAt).toLocaleDateString() : 'Unknown'}</div>
                           </div>
-
-                          {/* Expanded Category Breakdown */}
-                          {expandedSubmission === result.id && (
-                            <div className="px-4 pb-4 bg-gray-50/50">
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                                {result.categories.map((category, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm"
-                                  >
-                                    <h4 className="font-semibold text-gray-900 mb-3 text-sm">
-                                      {category.category_name}
-                                    </h4>
-                                    <ul className="space-y-1.5 mb-3">
-                                      {category.cards.map((card, cardIdx) => (
-                                        <li
-                                          key={cardIdx}
-                                          className="text-sm text-gray-600 flex items-start gap-2"
-                                        >
-                                          <span className="text-gray-400 mt-0.5">•</span>
-                                          <span>{card}</span>
-                                        </li>
-                                      ))}
-                                    </ul>
-                                    <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
-                                      {category.cards.length} {category.cards.length === 1 ? 'card' : 'cards'}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Action Buttons */}
-                              <div className="flex items-center gap-2 pt-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadSingleJSON(result);
-                                  }}
-                                  className="text-gray-600 hover:text-gray-900"
-                                >
-                                  <Download size={16} className="mr-1" />
-                                  Download
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteClick(result.id);
-                                  }}
-                                  className="text-gray-600 hover:text-red-600"
-                                >
-                                  <Trash2 size={16} className="mr-1" />
-                                  Delete
-                                </Button>
-                              </div>
-                            </div>
-                          )}
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => handleRestore(result.id)} className="text-green-600 hover:text-green-700 hover:bg-green-50">
+                              <RotateCcw size={16} className="mr-1" /> Restore
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => handlePermanentDeleteClick(result.id)} className="text-red-600 hover:text-red-700 hover:bg-red-50">
+                              <Trash2 size={16} className="mr-1" /> Delete Forever
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
               ))}
-              {results.length === 0 && <div className="text-center py-10 text-gray-400">No submissions found.</div>}
             </div>
-          </>
-        )}
 
+          ) : activeTab === 'overview' ? (
+            /* ── OVERVIEW TAB ── */
+            <div className="space-y-8 max-w-5xl">
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="p-6 border-l-4 border-l-blue-500 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-gray-500 text-sm font-medium mb-1">Total Submissions</p>
+                      <div className="text-4xl font-bold text-gray-900">{totalSubmissions}</div>
+                    </div>
+                    <div className={`px-2 py-1 rounded text-xs font-semibold ${projectStatus === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                      {projectStatus}
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="p-6 border-l-4 border-l-indigo-500 shadow-sm hover:shadow-md transition-shadow">
+                  <div>
+                    <p className="text-gray-500 text-sm font-medium mb-1">Total Unique Categories</p>
+                    <div className="text-4xl font-bold text-gray-900 mb-2">{uniqueCategoriesCount}</div>
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: '75%' }}></div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-2">Across all participants</p>
+                  </div>
+                </Card>
+
+                <Card className="p-6 border-l-4 border-l-purple-500 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="text-gray-500 text-sm font-medium mb-1">Avg. Cards Sorted</p>
+                      <div className="text-4xl font-bold text-gray-900">{avgCardsSorted}</div>
+                      <p className="text-xs text-gray-400 mt-1">cards per participant</p>
+                    </div>
+                    <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
+                      <Calendar size={20} />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Agreement + Velocity */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="p-6 shadow-sm">
+                  <div className="flex items-center gap-2 mb-6">
+                    <Trophy className="text-yellow-500" size={20} />
+                    <h2 className="text-lg font-bold text-gray-900">Top Categories Agreement</h2>
+                  </div>
+                  <div className="space-y-6">
+                    {categoryAgreement.map((cat, idx) => (
+                      <div key={cat.name}>
+                        <div className="flex justify-between text-sm font-medium mb-2">
+                          <span className="text-gray-700">{cat.name}</span>
+                          <span className="text-gray-500">
+                            {cat.percentage}% <span className="text-gray-400 font-normal">({cat.count})</span>
+                          </span>
+                        </div>
+                        <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full bg-gradient-to-r ${getGradientBar(idx)} transform origin-left transition-all duration-1000 ease-out`}
+                            style={{ width: `${cat.percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {categoryAgreement.length === 0 && <p className="text-gray-400 text-sm italic">No data yet.</p>}
+                  </div>
+                </Card>
+
+                <Card className="p-6 shadow-sm">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="text-blue-500" size={20} />
+                    <h2 className="text-lg font-bold text-gray-900">Submission Velocity</h2>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-6">Activity over the last 5 active days</p>
+                  <div className="h-[250px] w-full">
+                    {submissionVelocityData.length > 0 ? (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={submissionVelocityData}>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
+                          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} />
+                          <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
+                          <Line type="monotone" dataKey="count" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 4, fill: '#8B5CF6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">No activity recorded</div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+
+              {/* Participant Submissions Timeline */}
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-gray-900">Participant Submissions</h2>
+
+                {Object.entries(groupedResults).reverse().map(([date, items]) => (
+                  <div key={date} className="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+                    <div
+                      className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => setExpandedDate(expandedDate === date ? null : date)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-blue-100 p-1.5 rounded text-blue-600">
+                          <Calendar size={16} />
+                        </div>
+                        <span className="font-medium text-gray-900">{date}</span>
+                        <span className="text-sm text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">{items.length}</span>
+                      </div>
+                      {expandedDate === date ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                    </div>
+
+                    {expandedDate === date && (
+                      <div className="divide-y divide-gray-100">
+                        {items.map((result) => (
+                          <div key={result.id} className="bg-white">
+                            <div
+                              className="p-4 hover:bg-gray-50 flex justify-between items-center cursor-pointer group"
+                              onClick={() => setExpandedSubmission(expandedSubmission === result.id ? null : result.id)}
+                            >
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="h-10 w-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold shadow-sm">
+                                  {result.email.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="font-medium text-gray-900">{result.email}</div>
+                                  <div className="text-xs text-gray-500">
+                                    {result.categories.length} categories • {result.categories.reduce((acc, c) => acc + c.cards.length, 0)} cards sorted
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); downloadSingleJSON(result); }}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-blue-50 rounded text-blue-600 hover:text-blue-700"
+                                    title="Download JSON"
+                                  >
+                                    <Download size={18} />
+                                  </button>
+                                  {expandedSubmission === result.id ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                                </div>
+                              </div>
+                            </div>
+
+                            {expandedSubmission === result.id && (
+                              <div className="px-4 pb-4 bg-gray-50/50">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                                  {result.categories.map((category, idx) => (
+                                    <div key={idx} className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                                      <h4 className="font-semibold text-gray-900 mb-2 text-sm">{category.category_name}</h4>
+                                      {category.suggested_name && (
+                                        <div className="flex items-center gap-1.5 mb-3 px-2.5 py-1.5 rounded-md bg-blue-50 border border-blue-200">
+                                          <span className="text-xs font-semibold text-blue-500 uppercase tracking-wide">Suggested:</span>
+                                          <span className="text-xs font-medium text-blue-700">{category.suggested_name}</span>
+                                        </div>
+                                      )}
+                                      <ul className="space-y-1.5 mb-3">
+                                        {category.cards.map((card, cardIdx) => (
+                                          <li key={cardIdx} className="text-sm text-gray-600 flex items-start gap-2">
+                                            <span className="text-gray-400 mt-0.5">•</span>
+                                            <span>{card}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                      <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
+                                        {category.cards.length} {category.cards.length === 1 ? 'card' : 'cards'}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2">
+                                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); downloadSingleJSON(result); }} className="text-gray-600 hover:text-gray-900">
+                                    <Download size={16} className="mr-1" /> Download
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteClick(result.id); }} className="text-gray-600 hover:text-red-600">
+                                    <Trash2 size={16} className="mr-1" /> Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {results.length === 0 && <div className="text-center py-10 text-gray-400">No submissions found.</div>}
+              </div>
+            </div>
+
+          ) : (
+            /* ── CATEGORIES TAB ── */
+            <div className="space-y-6 max-w-5xl">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Categories</h2>
+                <p className="text-sm text-gray-500 mt-1">Cards sorted into each category across all participant submissions</p>
+              </div>
+
+              {Object.keys(categoryCardMap).length === 0 ? (
+                <div className="text-center py-16 text-gray-400">No submissions yet.</div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {Object.entries(categoryCardMap)
+                    .sort((a, b) => b[1].participantCount - a[1].participantCount)
+                    .map(([categoryName, data]) => {
+                      const sortedCards = Object.entries(data.cardCounts)
+                        .sort((a, b) => b[1] - a[1]);
+
+                      return (
+                        <Card key={categoryName} className="p-6 shadow-sm hover:shadow-md transition-shadow">
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="font-bold text-gray-900 text-lg">{categoryName}</h3>
+                            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
+                              {data.participantCount} participant{data.participantCount !== 1 ? 's' : ''}
+                            </span>
+                          </div>
+
+                          <div className="space-y-2">
+                            {sortedCards.map(([card, count]) => {
+                              const pct = Math.round((count / totalSubmissions) * 100);
+                              return (
+                                <div key={card}>
+                                  <div className="flex justify-between text-sm mb-1">
+                                    <span className="text-gray-700 truncate mr-4">{card}</span>
+                                    <span className="text-gray-400 flex-shrink-0">{count}/{totalSubmissions}</span>
+                                  </div>
+                                  <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full bg-gradient-to-r from-blue-400 to-indigo-500 transition-all duration-700"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </Card>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          )}
+        </main>
       </div>
 
       {/* Dialogs */}
       <ConfirmDialog
         isOpen={deleteConfirmOpen}
-        onClose={() => {
-          setDeleteConfirmOpen(false);
-          setResultToDelete(null);
-        }}
+        onClose={() => { setDeleteConfirmOpen(false); setResultToDelete(null); }}
         onConfirm={handleDeleteConfirm}
         title="Move to Recycle Bin"
         message="Are you sure you want to move this submission to the Recycle Bin? You can restore it later."
@@ -631,10 +670,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
       <ConfirmDialog
         isOpen={permanentDeleteConfirmOpen}
-        onClose={() => {
-          setPermanentDeleteConfirmOpen(false);
-          setResultToPermanentlyDelete(null);
-        }}
+        onClose={() => { setPermanentDeleteConfirmOpen(false); setResultToPermanentlyDelete(null); }}
         onConfirm={handlePermanentDeleteConfirm}
         title="Permanently Delete"
         message="This action cannot be undone. This submission will be permanently removed."
