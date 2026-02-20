@@ -487,7 +487,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
             <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--color-text-primary)' }}>
               Instructions for this activity -
             </h3>
-            <ol className="space-y-4 mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+            <ol className="space-y-4" style={{ color: 'var(--color-text-secondary)' }}>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">1</span>
                 <span className="leading-relaxed">Go through the list of cards on the left section</span>
@@ -500,10 +500,13 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                 <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">3</span>
                 <span className="leading-relaxed">Create a new category if needed, and name that category. You can edit or delete this category.</span>
               </li>
+              <li className="flex items-start gap-3">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">4</span>
+                <span className="leading-relaxed font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                  Remember - there are no right or wrong answers, only answers that are logical to you!
+                </span>
+              </li>
             </ol>
-            <p className="text-base font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-              <span style={{ color: 'var(--color-text-primary)' }}>Remember</span> - there are no right or wrong answers, only answers that are logical to you!
-            </p>
           </div>
 
           <div className="flex justify-center">
