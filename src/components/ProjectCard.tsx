@@ -39,7 +39,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
         <div
             draggable={isDraggable}
             onDragStart={onDragStart}
-            className={`p-3 rounded-lg border transition-all hover:shadow-md relative group ${className}`}
+            className={`p-3 rounded-lg border transition-all hover:shadow-md group flex items-center gap-2 ${className}`}
             style={{
                 backgroundColor: 'var(--color-bg-secondary)',
                 borderColor: 'var(--color-border-primary)',
@@ -48,13 +48,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                 ...style,
             }}
         >
-            <div className="break-words pr-6">{content}</div>
+            <div className="flex-1 break-words min-w-0">{content}</div>
 
             {description && (
                 <>
                     <div
                         ref={iconRef}
-                        className="absolute top-3 right-3 opacity-0 invisible group-hover:opacity-100 group-hover:visible focus:opacity-100 focus:visible transition-all duration-200 outline-none"
+                        className="flex-shrink-0 flex items-center justify-center opacity-0 invisible group-hover:opacity-100 group-hover:visible focus:opacity-100 focus:visible transition-all duration-200 outline-none"
                         role="button"
                         aria-label="Show card description"
                         tabIndex={0}
@@ -86,8 +86,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
                         document.body
                     )}
                 </>
-            )
-            }
+            )}
         </div >
+
     );
 };
