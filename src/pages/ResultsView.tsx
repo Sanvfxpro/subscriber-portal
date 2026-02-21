@@ -453,12 +453,11 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                     <div className="px-6 pt-6 pb-5">
 
                       {/* Card header */}
-                      <h2 className="text-base font-bold text-gray-900 mb-5">Top agreement of cards in categories</h2>
+                      <h2 className="text-base font-bold text-gray-900 mb-5">Categories</h2>
 
                       {adminAgreement.length > 0 && (
                         <div className="mb-5">
-                          {/* Section title OUTSIDE the box */}
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
                             Admin Categories ({adminAgreement.length})
                           </p>
 
@@ -538,34 +537,48 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                         </div>
                       )}
 
-                      {/* Custom Categories — collapsible, outside the bordered box */}
-                      {hasOthers && (
-                        <div className="mb-4">
-                          <div
-                            className="flex justify-between items-center cursor-pointer group py-1"
-                            onClick={() => setOthersExpanded(o => !o)}
-                          >
-                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                              Custom Categories ({othersCustomNames.length})
-                            </p>
-                            <div className="flex items-center gap-1.5 text-gray-400">
-                              <span className="text-xs hidden sm:inline">← Collapsible</span>
+                      {/* Custom Categories — show 3 preview, expand to see all */}
+                      {hasOthers && (() => {
+                        const preview = othersCustomNames.slice(0, 3);
+                        const hasMore = othersCustomNames.length > 3;
+                        const isScrollable = othersCustomNames.length > 7;
+                        return (
+                          <div className="mb-4">
+                            {/* Header row */}
+                            <div
+                              className="flex justify-between items-center cursor-pointer group py-1 mb-2"
+                              onClick={() => setOthersExpanded(o => !o)}
+                            >
+                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                                Custom Categories ({othersCustomNames.length})
+                              </p>
                               <ChevronDown
                                 size={14}
-                                className={`transition-all group-hover:text-gray-600 ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
+                                className={`text-gray-400 group-hover:text-gray-600 transition-all ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
                               />
                             </div>
-                          </div>
 
-                          {othersExpanded && (
-                            <div className="mt-2 rounded-lg border border-yellow-200 overflow-hidden" style={{ backgroundColor: '#FFFBEB' }}>
-                              {othersCustomNames.map(name => (
-                                <div key={name} className="px-4 py-2 text-sm text-gray-600 border-b border-yellow-100 last:border-b-0">• {name}</div>
+                            {/* Always-visible preview: first 3 */}
+                            <div className="flex flex-col gap-1.5">
+                              {preview.map(name => (
+                                <div key={name} className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-md">{name}</div>
                               ))}
                             </div>
-                          )}
-                        </div>
-                      )}
+
+                            {/* Expanded: remaining items (4+), scroll if >7 total */}
+                            {othersExpanded && hasMore && (
+                              <div
+                                className="mt-1.5 flex flex-col gap-1.5"
+                                style={isScrollable ? { maxHeight: '210px', overflowY: 'auto', paddingRight: '4px' } : {}}
+                              >
+                                {othersCustomNames.slice(3).map(name => (
+                                  <div key={name} className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-md">• {name}</div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {adminAgreement.length === 0 && !hasOthers && (
                         <p className="text-gray-400 text-sm italic py-4">No data yet.</p>
