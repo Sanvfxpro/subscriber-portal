@@ -481,10 +481,17 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                             >
                               <span className="text-base font-semibold text-gray-900">{cat.name}</span>
                               {top5.length > 0 && (
-                                <ChevronDown
-                                  size={15}
-                                  className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${isExpanded ? 'rotate-180 text-blue-500' : ''}`}
-                                />
+                                <div className="flex items-center gap-1.5">
+                                  {!isExpanded && (
+                                    <span className="text-xs text-gray-400 italic group-hover:text-gray-500 transition-colors whitespace-nowrap">
+                                      View top 5 cards ⭐
+                                    </span>
+                                  )}
+                                  <ChevronDown
+                                    size={15}
+                                    className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${isExpanded ? 'rotate-180 text-blue-500' : ''}`}
+                                  />
+                                </div>
                               )}
                             </div>
                             {/* Row 2: badge */}
