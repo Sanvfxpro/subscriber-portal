@@ -25,7 +25,8 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'categories'>('overview');
-  const [othersExpanded, setOthersExpanded] = useState(false);
+
+
   const [expandedAdminCategory, setExpandedAdminCategory] = useState<string | null>(null);
 
   // Delete/Restore state
@@ -537,44 +538,27 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                         </div>
                       )}
 
-                      {/* Custom Categories — show 3 preview, expand to see all */}
+                      {/* Custom Categories — static 3-preview, "+N more" link */}
                       {hasOthers && (() => {
                         const preview = othersCustomNames.slice(0, 3);
-                        const hasMore = othersCustomNames.length > 3;
-                        const isScrollable = othersCustomNames.length > 7;
+                        const remaining = othersCustomNames.length - 3;
                         return (
                           <div className="mb-4">
-                            {/* Header row */}
-                            <div
-                              className="flex justify-between items-center cursor-pointer group py-1 mb-2"
-                              onClick={() => setOthersExpanded(o => !o)}
-                            >
-                              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                                Custom Categories ({othersCustomNames.length})
-                              </p>
-                              <ChevronDown
-                                size={14}
-                                className={`text-gray-400 group-hover:text-gray-600 transition-all ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
-                              />
-                            </div>
-
-                            {/* Always-visible preview: first 3 */}
+                            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-2">
+                              Custom Categories ({othersCustomNames.length})
+                            </p>
                             <div className="flex flex-col gap-1.5">
                               {preview.map(name => (
-                                <div key={name} className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-md">{name}</div>
+                                <div key={name} className="px-3 py-1.5 text-sm font-medium text-amber-800 bg-amber-50 border border-amber-100 rounded-md">{name}</div>
                               ))}
                             </div>
-
-                            {/* Expanded: remaining items (4+), scroll if >7 total */}
-                            {othersExpanded && hasMore && (
-                              <div
-                                className="mt-1.5 flex flex-col gap-1.5"
-                                style={isScrollable ? { maxHeight: '210px', overflowY: 'auto', paddingRight: '4px' } : {}}
+                            {remaining > 0 && (
+                              <button
+                                className="mt-2.5 text-xs font-medium text-blue-500 hover:text-blue-700 hover:underline transition-colors"
+                                onClick={() => { setActiveTab('categories'); setShowRecycleBin(false); }}
                               >
-                                {othersCustomNames.slice(3).map(name => (
-                                  <div key={name} className="px-3 py-1.5 text-sm text-amber-800 bg-amber-50 border border-amber-100 rounded-md">• {name}</div>
-                                ))}
-                              </div>
+                                +{remaining} more in Categories tab →
+                              </button>
                             )}
                           </div>
                         );
@@ -583,6 +567,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                       {adminAgreement.length === 0 && !hasOthers && (
                         <p className="text-gray-400 text-sm italic py-4">No data yet.</p>
                       )}
+
                     </div>
 
                     {/* CTA footer */}
