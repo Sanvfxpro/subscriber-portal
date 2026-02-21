@@ -455,136 +455,133 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                 {/* Agreement + Velocity */}
                 <div className="grid grid-cols-1 gap-8" style={{ gridTemplateColumns: 'minmax(0,5fr) minmax(0,7fr)' }}>
                   <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
-                    {/* Header */}
-                    <div className="flex items-center gap-2 px-6 pt-6 pb-4">
-                      <Trophy className="text-yellow-500" size={20} />
-                      <h2 className="text-lg font-bold text-gray-900">Top agreement of cards in categories</h2>
-                    </div>
+                    <div className="px-6 pt-6 pb-5">
 
-                    {/* Rows */}
-                    <div className="px-6 pb-2">
-                      {adminAgreement.map((cat) => {
-                        const catCards = categoryCardMap[cat.name];
-                        const top5 = catCards
-                          ? Object.entries(catCards.cardCounts)
-                            .sort((a, b) => b[1] - a[1])
-                            .slice(0, 5)
-                          : [];
-                        const isExpanded = expandedAdminCategory === cat.name;
+                      {/* Card header */}
+                      <div className="flex items-center gap-2 mb-5">
+                        <Trophy className="text-yellow-500 flex-shrink-0" size={18} />
+                        <h2 className="text-base font-bold text-gray-900">Top agreement of cards in categories</h2>
+                      </div>
 
-                        return (
-                          <div key={cat.name} className="py-3.5 border-b border-gray-100 last:border-b-0">
-                            {/* Row 1: name (left) + chevron (right) */}
-                            <div
-                              className="flex justify-between items-center mb-1.5 cursor-pointer group"
-                              onClick={() => setExpandedAdminCategory(isExpanded ? null : cat.name)}
-                            >
-                              <span className="text-base font-semibold text-gray-900">{cat.name}</span>
-                              {top5.length > 0 && (
-                                <div className="flex items-center gap-1.5">
-                                  {!isExpanded && (
-                                    <span className="text-xs text-gray-400 italic group-hover:text-gray-500 transition-colors whitespace-nowrap">
-                                      View top 5 cards ⭐
-                                    </span>
-                                  )}
-                                  <ChevronDown
-                                    size={15}
-                                    className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${isExpanded ? 'rotate-180 text-blue-500' : ''}`}
-                                  />
-                                </div>
-                              )}
-                            </div>
-                            {/* Row 2: badge */}
-                            <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
+                      {adminAgreement.length > 0 && (
+                        <div className="mb-5">
+                          {/* Section title OUTSIDE the box */}
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                            Admin Categories ({adminAgreement.length})
+                          </p>
 
-                            {/* Top 5 cards expansion */}
-                            {isExpanded && top5.length > 0 && (
-                              <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden" style={{ backgroundColor: '#F9FAFB' }}>
-                                <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide border-b border-gray-200" style={{ color: '#9CA3AF' }}>
-                                  Top {top5.length} cards
-                                </div>
-                                {top5.map(([cardName, count], cardIdx) => {
-                                  const pct = totalSubmissions > 0 ? Math.round((count / totalSubmissions) * 100) : 0;
-                                  const showBar = cardIdx < 3;
-                                  const barColor = pct === 100 ? '#10B981' : pct >= 75 ? '#34D399' : pct >= 50 ? '#F59E0B' : '#EF4444';
-                                  return (
-                                    <div key={cardName} className="px-3 py-2.5 border-b border-gray-100 last:border-b-0">
-                                      {/* Card name row */}
-                                      <div className="flex items-center gap-2 mb-1.5">
-                                        <span className="text-xs font-bold w-4 flex-shrink-0" style={{ color: '#9CA3AF' }}>{cardIdx + 1}.</span>
-                                        <span className="text-sm font-medium text-gray-800 truncate">{cardName}</span>
-                                      </div>
-                                      {/* Progress or stats-only */}
-                                      {showBar ? (
-                                        <div className="flex items-center gap-2 pl-6">
-                                          <div className="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
-                                            <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: barColor }} />
-                                          </div>
-                                          <span className="text-xs text-gray-400 flex-shrink-0 font-semibold">{count}/{totalSubmissions}</span>
-                                          <span className="text-xs font-bold text-gray-700 flex-shrink-0 w-9 text-right">{pct}%</span>
-                                          <span className="w-4 text-xs text-center flex-shrink-0">
-                                            {pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        <div className="flex items-center justify-end gap-2 pl-6">
-                                          <span className="text-xs text-gray-400 font-semibold">{count}/{totalSubmissions}</span>
-                                          <span className="text-xs font-bold text-gray-700 w-9 text-right">{pct}%</span>
-                                          <span className="w-4 text-xs text-center">
-                                            {pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}
-                                          </span>
-                                        </div>
+                          {/* Bordered box wrapping all admin rows */}
+                          <div className="rounded-lg border border-gray-200 divide-y divide-gray-100 overflow-hidden">
+                            {adminAgreement.map((cat) => {
+                              const catCards = categoryCardMap[cat.name];
+                              const top5 = catCards
+                                ? Object.entries(catCards.cardCounts)
+                                  .sort((a, b) => b[1] - a[1])
+                                  .slice(0, 5)
+                                : [];
+                              const isExpanded = expandedAdminCategory === cat.name;
+
+                              return (
+                                <div key={cat.name}>
+                                  {/* Row: name (left) + hint + chevron (right) */}
+                                  <div
+                                    className="flex justify-between items-center px-4 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors group"
+                                    onClick={() => setExpandedAdminCategory(isExpanded ? null : cat.name)}
+                                  >
+                                    <span className="text-sm font-semibold text-gray-900">{cat.name}</span>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      {!isExpanded && top5.length > 0 && (
+                                        <span className="text-xs text-gray-400 italic group-hover:text-gray-500 transition-colors whitespace-nowrap">
+                                          View top{' '}
+                                          <span style={{ color: '#10B981', fontWeight: 600, fontStyle: 'normal' }}>5</span>
+                                          {' '}cards ⭐
+                                        </span>
                                       )}
+                                      <ChevronDown
+                                        size={14}
+                                        className={`text-gray-400 group-hover:text-gray-600 transition-all ${isExpanded ? 'rotate-180 text-blue-500' : ''}`}
+                                      />
                                     </div>
-                                  );
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                                  </div>
 
-                      {/* Others row */}
+                                  {/* Expanded top-5 cards */}
+                                  {isExpanded && top5.length > 0 && (
+                                    <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 space-y-0">
+                                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 pb-2">Top {top5.length} cards</p>
+                                      {top5.map(([cardName, count], cardIdx) => {
+                                        const pct = totalSubmissions > 0 ? Math.round((count / totalSubmissions) * 100) : 0;
+                                        const showBar = cardIdx < 3;
+                                        const barColor = pct === 100 ? '#10B981' : pct >= 75 ? '#34D399' : pct >= 50 ? '#F59E0B' : '#EF4444';
+                                        return (
+                                          <div key={cardName} className="py-2 border-b border-gray-100 last:border-b-0">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                              <span className="text-xs font-bold w-4 flex-shrink-0 text-gray-400">{cardIdx + 1}.</span>
+                                              <span className="text-sm font-medium text-gray-800 truncate">{cardName}</span>
+                                            </div>
+                                            {showBar ? (
+                                              <div className="flex items-center gap-2 pl-6">
+                                                <div className="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                                                  <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                                                </div>
+                                                <span className="text-xs text-gray-400 flex-shrink-0 font-semibold">{count}/{totalSubmissions}</span>
+                                                <span className="text-xs font-bold text-gray-700 flex-shrink-0 w-8 text-right">{pct}%</span>
+                                                <span className="w-4 text-xs text-center flex-shrink-0">{pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}</span>
+                                              </div>
+                                            ) : (
+                                              <div className="flex items-center justify-end gap-2 pl-6">
+                                                <span className="text-xs text-gray-400 font-semibold">{count}/{totalSubmissions}</span>
+                                                <span className="text-xs font-bold text-gray-700 w-8 text-right">{pct}%</span>
+                                                <span className="w-4 text-xs text-center">{pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Custom Categories — collapsible, outside the bordered box */}
                       {hasOthers && (
-                        <div className="py-3.5">
-                          {/* Row 1: name (left) + chevron (right) */}
+                        <div className="mb-4">
                           <div
-                            className="flex justify-between items-center mb-1.5 cursor-pointer group"
+                            className="flex justify-between items-center cursor-pointer group py-1"
                             onClick={() => setOthersExpanded(o => !o)}
                           >
-                            <span className="text-base font-semibold text-gray-900">Others</span>
-                            <ChevronDown
-                              size={15}
-                              className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
-                            />
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                              Custom Categories ({othersCustomNames.length})
+                            </p>
+                            <div className="flex items-center gap-1.5 text-gray-400">
+                              <span className="text-xs hidden sm:inline">← Collapsible</span>
+                              <ChevronDown
+                                size={14}
+                                className={`transition-all group-hover:text-gray-600 ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
+                              />
+                            </div>
                           </div>
-                          {/* Row 2: badge */}
-                          <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
-                            {othersCustomNames.length} custom categories
-                          </span>
-                          {/* Expanded list */}
+
                           {othersExpanded && (
-                            <div className="mt-3 rounded-lg border border-yellow-200 overflow-hidden" style={{ backgroundColor: '#FFFBEB' }}>
-                              <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide border-b border-yellow-200" style={{ color: '#92400E' }}>
-                                Custom categories
-                              </div>
+                            <div className="mt-2 rounded-lg border border-yellow-200 overflow-hidden" style={{ backgroundColor: '#FFFBEB' }}>
                               {othersCustomNames.map(name => (
-                                <div key={name} className="px-3 py-1.5 text-sm text-gray-600 border-b border-yellow-100 last:border-b-0">• {name}</div>
+                                <div key={name} className="px-4 py-2 text-sm text-gray-600 border-b border-yellow-100 last:border-b-0">• {name}</div>
                               ))}
                             </div>
                           )}
                         </div>
                       )}
 
-
                       {adminAgreement.length === 0 && !hasOthers && (
                         <p className="text-gray-400 text-sm italic py-4">No data yet.</p>
                       )}
                     </div>
 
-
                     {/* CTA footer */}
-                    <div className="px-6 py-3 mt-2 border-t border-gray-100" style={{ backgroundColor: '#F9FAFB' }}>
+                    <div className="px-6 py-3 border-t border-gray-100" style={{ backgroundColor: '#F9FAFB' }}>
                       <button
                         className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors group"
                         onClick={() => { setActiveTab('categories'); setShowRecycleBin(false); }}
@@ -594,6 +591,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                       </button>
                     </div>
                   </Card>
+
 
                   <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
                     <div className="flex items-center gap-2 px-6 pt-5 pb-3">
