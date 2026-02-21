@@ -472,44 +472,60 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
                       return (
                         <div key={cat.name} className="py-3.5 border-b border-gray-100 last:border-b-0">
-                          {/* Row 1: name + chevron + stats */}
-                          <div className="flex justify-between items-center mb-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-base font-semibold text-gray-900">{cat.name}</span>
-                              {top5.length > 0 && (
-                                <button
-                                  onClick={() => setExpandedAdminCategory(isExpanded ? null : cat.name)}
-                                  className="p-0.5 rounded text-gray-400 hover:text-gray-600 transition-colors"
-                                  aria-label="Show top cards"
-                                >
-                                  <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-                                </button>
-                              )}
-                            </div>
-                            <span className="text-base font-semibold text-gray-900">
-                              {cat.percentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({cat.count})</span>
-                            </span>
+                          {/* Row 1: name (left) + chevron (right) */}
+                          <div
+                            className="flex justify-between items-center mb-1.5 cursor-pointer group"
+                            onClick={() => setExpandedAdminCategory(isExpanded ? null : cat.name)}
+                          >
+                            <span className="text-base font-semibold text-gray-900">{cat.name}</span>
+                            {top5.length > 0 && (
+                              <ChevronDown
+                                size={15}
+                                className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${isExpanded ? 'rotate-180 text-blue-500' : ''}`}
+                              />
+                            )}
                           </div>
                           {/* Row 2: badge */}
                           <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
 
                           {/* Top 5 cards expansion */}
                           {isExpanded && top5.length > 0 && (
-                            <div className="mt-3 rounded-lg overflow-hidden" style={{ backgroundColor: '#F9FAFB', borderLeft: '3px solid #3B82F6' }}>
-                              <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280' }}>
+                            <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden" style={{ backgroundColor: '#F9FAFB' }}>
+                              <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide border-b border-gray-200" style={{ color: '#9CA3AF' }}>
                                 Top {top5.length} cards
                               </div>
-                              {top5.map(([cardName, count]) => {
+                              {top5.map(([cardName, count], cardIdx) => {
                                 const pct = totalSubmissions > 0 ? Math.round((count / totalSubmissions) * 100) : 0;
+                                const showBar = cardIdx < 3;
+                                const barColor = pct === 100 ? '#10B981' : pct >= 75 ? '#34D399' : pct >= 50 ? '#F59E0B' : '#EF4444';
                                 return (
-                                  <div key={cardName} className="flex justify-between items-center px-3 py-1.5 border-t border-gray-200">
-                                    <span className="text-sm text-gray-700 font-medium truncate mr-3">{cardName}</span>
-                                    <div className="flex items-center gap-2 flex-shrink-0">
-                                      <span className="text-xs text-gray-500 font-semibold">{count}/{totalSubmissions}</span>
-                                      <span className="text-xs font-bold text-gray-800">{pct}%</span>
-                                      {pct === 100 && <span title="100% agreement">🏆</span>}
-                                      {pct >= 75 && pct < 100 && <span title="High agreement">⭐</span>}
+                                  <div key={cardName} className="px-3 py-2.5 border-b border-gray-100 last:border-b-0">
+                                    {/* Card name row */}
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                      <span className="text-xs font-bold w-4 flex-shrink-0" style={{ color: '#9CA3AF' }}>{cardIdx + 1}.</span>
+                                      <span className="text-sm font-medium text-gray-800 truncate">{cardName}</span>
                                     </div>
+                                    {/* Progress or stats-only */}
+                                    {showBar ? (
+                                      <div className="flex items-center gap-2 pl-6">
+                                        <div className="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
+                                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+                                        </div>
+                                        <span className="text-xs text-gray-400 flex-shrink-0 font-semibold">{count}/{totalSubmissions}</span>
+                                        <span className="text-xs font-bold text-gray-700 flex-shrink-0 w-9 text-right">{pct}%</span>
+                                        <span className="w-4 text-xs text-center flex-shrink-0">
+                                          {pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center justify-end gap-2 pl-6">
+                                        <span className="text-xs text-gray-400 font-semibold">{count}/{totalSubmissions}</span>
+                                        <span className="text-xs font-bold text-gray-700 w-9 text-right">{pct}%</span>
+                                        <span className="w-4 text-xs text-center">
+                                          {pct === 100 ? '🏆' : pct >= 75 ? '⭐' : ''}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -522,21 +538,16 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                     {/* Others row */}
                     {hasOthers && (
                       <div className="py-3.5">
-                        {/* Row 1: name + stats + chevron */}
-                        <div className="flex justify-between items-center mb-1.5">
+                        {/* Row 1: name (left) + chevron (right) */}
+                        <div
+                          className="flex justify-between items-center mb-1.5 cursor-pointer group"
+                          onClick={() => setOthersExpanded(o => !o)}
+                        >
                           <span className="text-base font-semibold text-gray-900">Others</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-base font-semibold text-gray-900">
-                              {othersPercentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({othersParticipantCount})</span>
-                            </span>
-                            <button
-                              onClick={() => setOthersExpanded(o => !o)}
-                              className="p-0.5 rounded text-gray-400 hover:text-gray-600 transition-colors"
-                              aria-label="Expand custom categories"
-                            >
-                              <ChevronDown size={14} className={`transition-transform ${othersExpanded ? 'rotate-180' : ''}`} />
-                            </button>
-                          </div>
+                          <ChevronDown
+                            size={15}
+                            className={`text-gray-400 group-hover:text-gray-600 transition-all flex-shrink-0 ${othersExpanded ? 'rotate-180 text-yellow-500' : ''}`}
+                          />
                         </div>
                         {/* Row 2: badge */}
                         <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
@@ -544,14 +555,18 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                         </span>
                         {/* Expanded list */}
                         {othersExpanded && (
-                          <div className="mt-3 pl-3 border-l-2 border-yellow-300">
+                          <div className="mt-3 rounded-lg border border-yellow-200 overflow-hidden" style={{ backgroundColor: '#FFFBEB' }}>
+                            <div className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide border-b border-yellow-200" style={{ color: '#92400E' }}>
+                              Custom categories
+                            </div>
                             {othersCustomNames.map(name => (
-                              <div key={name} className="text-sm text-gray-500 py-0.5">• {name}</div>
+                              <div key={name} className="px-3 py-1.5 text-sm text-gray-600 border-b border-yellow-100 last:border-b-0">• {name}</div>
                             ))}
                           </div>
                         )}
                       </div>
                     )}
+
 
                     {adminAgreement.length === 0 && !hasOthers && (
                       <p className="text-gray-400 text-sm italic py-4">No data yet.</p>
