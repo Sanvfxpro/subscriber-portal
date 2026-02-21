@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { ArrowLeft, Download, Trash2, Copy, Trophy, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Download, Trash2, Copy, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder, MessageSquare } from 'lucide-react';
 import { ProjectResults, ParticipantResult } from '../types';
 
 interface ResultWithId extends ParticipantResult {
@@ -195,11 +195,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
   const customAgreement = allCategoryAgreement.filter(c => !c.isAdmin);
 
-  // Aggregate "Others": count unique participants who used ANY custom category
-  const othersParticipantCount = results.filter(r =>
-    r.categories.some(c => !adminCategoryNames.has(c.category_name))
-  ).length;
-  const othersPercentage = totalSubmissions > 0 ? Math.round((othersParticipantCount / totalSubmissions) * 100) : 0;
   const othersCustomNames = customAgreement.map(c => c.name);
   const hasOthers = customAgreement.length > 0;
 
@@ -458,10 +453,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                     <div className="px-6 pt-6 pb-5">
 
                       {/* Card header */}
-                      <div className="flex items-center gap-2 mb-5">
-                        <Trophy className="text-yellow-500 flex-shrink-0" size={18} />
-                        <h2 className="text-base font-bold text-gray-900">Top agreement of cards in categories</h2>
-                      </div>
+                      <h2 className="text-base font-bold text-gray-900 mb-5">Top agreement of cards in categories</h2>
 
                       {adminAgreement.length > 0 && (
                         <div className="mb-5">
