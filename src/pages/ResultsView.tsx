@@ -693,11 +693,13 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
                       return (
                         <Card key={categoryName} className="p-6 shadow-sm hover:shadow-md transition-shadow">
-                          <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2 mb-3">
                             <h3 className="font-bold text-gray-900 text-lg">{categoryName}</h3>
-                            <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-600">
-                              {data.participantCount} participant{data.participantCount !== 1 ? 's' : ''}
-                            </span>
+                            {adminCategoryNames.has(categoryName) ? (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
+                            ) : (
+                              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>Custom</span>
+                            )}
                           </div>
 
                           <div className="space-y-2">
