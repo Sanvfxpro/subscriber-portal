@@ -301,7 +301,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 pr-14">
           <Button
             variant={showRecycleBin ? "primary" : "secondary"}
             onClick={() => { setShowRecycleBin(!showRecycleBin); setActiveTab('overview'); }}
