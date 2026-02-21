@@ -102,7 +102,7 @@ function App() {
   return (
     <AppProvider>
       <div className="relative min-h-screen">
-        <div className="absolute top-4 right-4 z-10">
+        <div className="fixed top-5 right-4 z-10 flex items-center">
           <ThemeToggle />
         </div>
 
