@@ -451,7 +451,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
               </div>
 
               {/* Agreement + Velocity */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 gap-8" style={{ gridTemplateColumns: 'minmax(0,5fr) minmax(0,7fr)' }}>
                 <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
                   {/* Header */}
                   <div className="flex items-center gap-2 px-6 pt-6 pb-4">
