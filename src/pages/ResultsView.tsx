@@ -3,8 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { ConfirmDialog } from '../components/ConfirmDialog';
-import { ArrowLeft, Download, Trash2, Copy, Trophy, TrendingUp, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder, MessageSquare } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
+import { ArrowLeft, Download, Trash2, Copy, Trophy, Calendar, ChevronDown, ChevronUp, RotateCcw, BarChart3, Folder, MessageSquare } from 'lucide-react';
 import { ProjectResults, ParticipantResult } from '../types';
 
 interface ResultWithId extends ParticipantResult {
@@ -206,20 +205,6 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
 
 
-  // 4. Submission Velocity
-  const submissionsByDate: Record<string, number> = {};
-  results.forEach(r => {
-    const date = r.createdAt ? new Date(r.createdAt).toISOString().split('T')[0] : 'Unknown';
-    submissionsByDate[date] = (submissionsByDate[date] || 0) + 1;
-  });
-
-  const submissionVelocityData = Object.entries(submissionsByDate)
-    .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-    .slice(-5)
-    .map(([date, count]) => ({
-      day: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      count
-    }));
 
   // 5. Group Submissions for Timeline
   const groupedResults = results.reduce((acc, result) => {
@@ -250,6 +235,19 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
       });
     });
   });
+
+  // 7. Top 10 Agreed Cards (across all categories, sorted by count desc)
+  const top10Cards = Object.entries(categoryCardMap)
+    .flatMap(([categoryName, data]) =>
+      Object.entries(data.cardCounts).map(([cardName, count]) => ({
+        cardName,
+        categoryName,
+        count,
+        pct: totalSubmissions > 0 ? Math.round((count / totalSubmissions) * 100) : 0,
+      }))
+    )
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
   // --- HELPERS ---
   const copyToClipboard = () => {
@@ -573,26 +571,50 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                   </div>
                 </Card>
 
-                <Card className="p-6 shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="text-blue-500" size={20} />
-                    <h2 className="text-lg font-bold text-gray-900">Submission Velocity</h2>
+                <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
+                  <div className="flex items-center gap-2 px-6 pt-5 pb-3">
+                    <span className="text-lg">🎯</span>
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">Top Agreed Cards</h2>
+                      <p className="text-xs text-gray-400 mt-0.5">Cards with highest participant agreement</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500 mb-6">Activity over the last 5 active days</p>
-                  <div className="h-[250px] w-full">
-                    {submissionVelocityData.length > 0 ? (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={submissionVelocityData}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                          <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
-                          <YAxis axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} />
-                          <RechartsTooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }} />
-                          <Line type="monotone" dataKey="count" stroke="#8B5CF6" strokeWidth={3} dot={{ r: 4, fill: '#8B5CF6', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">No activity recorded</div>
+
+                  <div className="px-4 pb-4 space-y-1 overflow-y-auto" style={{ maxHeight: '420px' }}>
+                    {top10Cards.length === 0 && (
+                      <p className="text-gray-400 text-sm italic py-4 px-2">No data yet.</p>
                     )}
+                    {top10Cards.map((card, idx) => {
+                      const barColor = card.pct === 100 ? '#10B981'
+                        : card.pct >= 75 ? '#34D399'
+                          : card.pct >= 50 ? '#F59E0B'
+                            : '#EF4444';
+                      return (
+                        <div key={`${card.categoryName}-${card.cardName}`} className="rounded-lg px-3 py-2.5 hover:bg-gray-50 transition-colors">
+                          {/* Row 1: rank, name, category badge */}
+                          <div className="flex justify-between items-center mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs font-bold text-gray-400 w-5 flex-shrink-0">{idx + 1}.</span>
+                              <span className="text-sm font-semibold text-gray-800 truncate">{card.cardName}</span>
+                            </div>
+                            <span className="text-xs text-gray-500 ml-2 flex-shrink-0 px-2 py-0.5 rounded-full border border-gray-200 bg-white">
+                              → {card.categoryName}
+                            </span>
+                          </div>
+                          {/* Row 2: progress bar + stats */}
+                          <div className="flex items-center gap-2 pl-7">
+                            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${card.pct}%`, backgroundColor: barColor }} />
+                            </div>
+                            <span className="text-xs text-gray-400 flex-shrink-0 font-semibold">{card.count}/{totalSubmissions}</span>
+                            <span className="text-xs font-bold text-gray-700 flex-shrink-0 w-8 text-right">{card.pct}%</span>
+                            <span className="w-4 text-center text-xs flex-shrink-0">
+                              {card.pct === 100 ? '🏆' : card.pct >= 75 ? '⭐' : ''}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </Card>
               </div>
