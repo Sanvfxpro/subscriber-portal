@@ -26,6 +26,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const [expandedSubmission, setExpandedSubmission] = useState<string | null>(null);
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'categories'>('overview');
+  const [othersExpanded, setOthersExpanded] = useState(false);
 
   // Delete/Restore state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -165,35 +166,44 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   }, 0);
   const avgCardsSorted = totalSubmissions > 0 ? Math.round(totalCardsSorted / totalSubmissions) : 0;
 
-  // 3. Category Agreement
+  // 3. Category Agreement — split admin vs custom, aggregate customs into "Others"
+  const adminCategoryNames = new Set(project.categories.map(c => c.name));
+
+  type CatAgreementItem = { name: string; percentage: number; count: number; isAdmin: boolean };
   const allCategoryNames = new Set<string>();
-  results.forEach(result => {
-    result.categories.forEach(category => {
-      allCategoryNames.add(category.category_name);
-    });
-  });
+  results.forEach(result => result.categories.forEach(c => allCategoryNames.add(c.category_name)));
 
   const uniqueCategoriesCount = allCategoryNames.size;
 
-  const categoryAgreement = Array.from(allCategoryNames)
-    .map(categoryName => {
-      const agreementPercentage = calculateCategoryAgreement({
-        submissions: results,
-        categoryName,
-        getCategories: (submission) => submission.categories,
-        getCards: (category) => category.cards,
-        getCategoryName: (category) => category.category_name,
-        getCardId: (card) => card,
-      });
+  const allCategoryAgreement: CatAgreementItem[] = Array.from(allCategoryNames).map(categoryName => ({
+    name: categoryName,
+    percentage: Math.round(calculateCategoryAgreement({
+      submissions: results,
+      categoryName,
+      getCategories: (s) => s.categories,
+      getCards: (c) => c.cards,
+      getCategoryName: (c) => c.category_name,
+      getCardId: (card) => card,
+    })),
+    count: results.filter(r => r.categories.some(c => c.category_name === categoryName)).length,
+    isAdmin: adminCategoryNames.has(categoryName),
+  }));
 
-      return {
-        name: categoryName,
-        percentage: Math.round(agreementPercentage),
-        count: results.filter(r => r.categories.some(c => c.category_name === categoryName)).length
-      };
-    })
-    .sort((a, b) => b.percentage - a.percentage)
-    .slice(0, 5);
+  const adminAgreement = allCategoryAgreement
+    .filter(c => c.isAdmin)
+    .sort((a, b) => b.percentage - a.percentage);
+
+  const customAgreement = allCategoryAgreement.filter(c => !c.isAdmin);
+
+  // Aggregate "Others": count unique participants who used ANY custom category
+  const othersParticipantCount = results.filter(r =>
+    r.categories.some(c => !adminCategoryNames.has(c.category_name))
+  ).length;
+  const othersPercentage = totalSubmissions > 0 ? Math.round((othersParticipantCount / totalSubmissions) * 100) : 0;
+  const othersCustomNames = customAgreement.map(c => c.name);
+  const hasOthers = customAgreement.length > 0;
+
+
 
   // 4. Submission Velocity
   const submissionsByDate: Record<string, number> = {};
@@ -452,29 +462,86 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
               {/* Agreement + Velocity */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="p-6 shadow-sm">
-                  <div className="flex items-center gap-2 mb-6">
+                <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
+                  {/* Header */}
+                  <div className="flex items-center gap-2 px-6 pt-6 pb-4">
                     <Trophy className="text-yellow-500" size={20} />
                     <h2 className="text-lg font-bold text-gray-900">Top Categories Agreement</h2>
                   </div>
-                  <div className="space-y-6">
-                    {categoryAgreement.map((cat, idx) => (
+
+                  {/* Rows */}
+                  <div className="px-6 pb-2 space-y-4">
+                    {adminAgreement.map((cat, idx) => (
                       <div key={cat.name}>
-                        <div className="flex justify-between text-sm font-medium mb-2">
-                          <span className="text-gray-700">{cat.name}</span>
+                        <div className="flex justify-between items-center text-sm font-medium mb-1.5">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-700">{cat.name}</span>
+                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>Admin</span>
+                          </div>
                           <span className="text-gray-500">
                             {cat.percentage}% <span className="text-gray-400 font-normal">({cat.count})</span>
                           </span>
                         </div>
-                        <div className="h-3 w-full bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full bg-gradient-to-r ${getGradientBar(idx)} transform origin-left transition-all duration-1000 ease-out`}
+                            className={`h-full rounded-full bg-gradient-to-r ${getGradientBar(idx)} transition-all duration-700`}
                             style={{ width: `${cat.percentage}%` }}
                           />
                         </div>
                       </div>
                     ))}
-                    {categoryAgreement.length === 0 && <p className="text-gray-400 text-sm italic">No data yet.</p>}
+
+                    {/* Others row */}
+                    {hasOthers && (
+                      <div>
+                        <button
+                          className="w-full text-left rounded-lg px-3 py-2.5 border transition-colors"
+                          style={{
+                            backgroundColor: othersExpanded ? '#FFFBEB' : '#FAFAFA',
+                            borderColor: othersExpanded ? '#FCD34D' : '#E5E7EB'
+                          }}
+                          onClick={() => setOthersExpanded(o => !o)}
+                        >
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-700">Others</span>
+                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
+                                {othersCustomNames.length} custom
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-500">
+                                {othersPercentage}% <span className="text-gray-400 font-normal">({othersParticipantCount})</span>
+                              </span>
+                              <ChevronDown size={14} className={`text-gray-400 transition-transform ${othersExpanded ? 'rotate-180' : ''}`} />
+                            </div>
+                          </div>
+                          {/* Expand: list custom category names */}
+                          {othersExpanded && (
+                            <ul className="mt-2 space-y-1 border-l-2 border-yellow-300 pl-3">
+                              {othersCustomNames.map(name => (
+                                <li key={name} className="text-xs text-gray-500">• {name}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {adminAgreement.length === 0 && !hasOthers && (
+                      <p className="text-gray-400 text-sm italic">No data yet.</p>
+                    )}
+                  </div>
+
+                  {/* CTA footer */}
+                  <div className="px-6 py-3 mt-2 border-t border-gray-100" style={{ backgroundColor: '#F9FAFB' }}>
+                    <button
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-blue-600 hover:bg-blue-50 hover:border-blue-300 transition-colors group"
+                      onClick={() => { setActiveTab('categories'); setShowRecycleBin(false); }}
+                    >
+                      Show all categories
+                      <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+                    </button>
                   </div>
                 </Card>
 
