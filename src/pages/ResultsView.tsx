@@ -27,6 +27,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
   const [showRecycleBin, setShowRecycleBin] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'categories'>('overview');
   const [othersExpanded, setOthersExpanded] = useState(false);
+  const [expandedAdminCategory, setExpandedAdminCategory] = useState<string | null>(null);
 
   // Delete/Restore state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -457,24 +458,68 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                   {/* Header */}
                   <div className="flex items-center gap-2 px-6 pt-6 pb-4">
                     <Trophy className="text-yellow-500" size={20} />
-                    <h2 className="text-lg font-bold text-gray-900">Top Categories Agreement</h2>
+                    <h2 className="text-lg font-bold text-gray-900">Top agreement of cards in categories</h2>
                   </div>
 
                   {/* Rows */}
                   <div className="px-6 pb-2">
-                    {adminAgreement.map((cat) => (
-                      <div key={cat.name} className="py-3.5 border-b border-gray-100 last:border-b-0">
-                        {/* Row 1: name + stats */}
-                        <div className="flex justify-between items-center mb-1.5">
-                          <span className="text-base font-semibold text-gray-900">{cat.name}</span>
-                          <span className="text-base font-semibold text-gray-900">
-                            {cat.percentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({cat.count})</span>
-                          </span>
+                    {adminAgreement.map((cat) => {
+                      const catCards = categoryCardMap[cat.name];
+                      const top5 = catCards
+                        ? Object.entries(catCards.cardCounts)
+                          .sort((a, b) => b[1] - a[1])
+                          .slice(0, 5)
+                        : [];
+                      const isExpanded = expandedAdminCategory === cat.name;
+
+                      return (
+                        <div key={cat.name} className="py-3.5 border-b border-gray-100 last:border-b-0">
+                          {/* Row 1: name + chevron + stats */}
+                          <div className="flex justify-between items-center mb-1.5">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-base font-semibold text-gray-900">{cat.name}</span>
+                              {top5.length > 0 && (
+                                <button
+                                  onClick={() => setExpandedAdminCategory(isExpanded ? null : cat.name)}
+                                  className="p-0.5 rounded text-gray-400 hover:text-gray-600 transition-colors"
+                                  aria-label="Show top cards"
+                                >
+                                  <ChevronDown size={14} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                </button>
+                              )}
+                            </div>
+                            <span className="text-base font-semibold text-gray-900">
+                              {cat.percentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({cat.count})</span>
+                            </span>
+                          </div>
+                          {/* Row 2: badge */}
+                          <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
+
+                          {/* Top 5 cards expansion */}
+                          {isExpanded && top5.length > 0 && (
+                            <div className="mt-3 rounded-lg overflow-hidden" style={{ backgroundColor: '#F9FAFB', borderLeft: '3px solid #3B82F6' }}>
+                              <div className="px-3 pt-2.5 pb-1 text-xs font-semibold uppercase tracking-wide" style={{ color: '#6B7280' }}>
+                                Top {top5.length} cards
+                              </div>
+                              {top5.map(([cardName, count]) => {
+                                const pct = totalSubmissions > 0 ? Math.round((count / totalSubmissions) * 100) : 0;
+                                return (
+                                  <div key={cardName} className="flex justify-between items-center px-3 py-1.5 border-t border-gray-200">
+                                    <span className="text-sm text-gray-700 font-medium truncate mr-3">{cardName}</span>
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <span className="text-xs text-gray-500 font-semibold">{count}/{totalSubmissions}</span>
+                                      <span className="text-xs font-bold text-gray-800">{pct}%</span>
+                                      {pct === 100 && <span title="100% agreement">🏆</span>}
+                                      {pct >= 75 && pct < 100 && <span title="High agreement">⭐</span>}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                        {/* Row 2: badge */}
-                        <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     {/* Others row */}
                     {hasOthers && (
