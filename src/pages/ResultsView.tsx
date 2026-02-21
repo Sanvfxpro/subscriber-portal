@@ -277,16 +277,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
     link.click();
   };
 
-  const getGradientBar = (index: number) => {
-    const colors = [
-      'from-blue-500 to-indigo-500',
-      'from-indigo-500 to-purple-500',
-      'from-purple-500 to-fuchsia-500',
-      'from-fuchsia-500 to-pink-500',
-      'from-pink-500 to-rose-500'
-    ];
-    return colors[index % colors.length];
-  };
+
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--color-bg-secondary)' }}>
@@ -470,68 +461,60 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                   </div>
 
                   {/* Rows */}
-                  <div className="px-6 pb-2 space-y-4">
-                    {adminAgreement.map((cat, idx) => (
-                      <div key={cat.name}>
-                        <div className="flex justify-between items-center text-sm font-medium mb-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-700">{cat.name}</span>
-                            <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF' }}>Admin</span>
-                          </div>
-                          <span className="text-gray-500">
-                            {cat.percentage}% <span className="text-gray-400 font-normal">({cat.count})</span>
+                  <div className="px-6 pb-2">
+                    {adminAgreement.map((cat) => (
+                      <div key={cat.name} className="py-3.5 border-b border-gray-100 last:border-b-0">
+                        {/* Row 1: name + stats */}
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-base font-semibold text-gray-900">{cat.name}</span>
+                          <span className="text-base font-semibold text-gray-900">
+                            {cat.percentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({cat.count})</span>
                           </span>
                         </div>
-                        <div className="h-2.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full bg-gradient-to-r ${getGradientBar(idx)} transition-all duration-700`}
-                            style={{ width: `${cat.percentage}%` }}
-                          />
-                        </div>
+                        {/* Row 2: badge */}
+                        <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#DBEAFE', color: '#1E40AF', border: '1px solid #93C5FD' }}>Admin</span>
                       </div>
                     ))}
 
                     {/* Others row */}
                     {hasOthers && (
-                      <div>
-                        <button
-                          className="w-full text-left rounded-lg px-3 py-2.5 border transition-colors"
-                          style={{
-                            backgroundColor: othersExpanded ? '#FFFBEB' : '#FAFAFA',
-                            borderColor: othersExpanded ? '#FCD34D' : '#E5E7EB'
-                          }}
-                          onClick={() => setOthersExpanded(o => !o)}
-                        >
-                          <div className="flex justify-between items-center">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-700">Others</span>
-                              <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
-                                {othersCustomNames.length} custom
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-gray-500">
-                                {othersPercentage}% <span className="text-gray-400 font-normal">({othersParticipantCount})</span>
-                              </span>
-                              <ChevronDown size={14} className={`text-gray-400 transition-transform ${othersExpanded ? 'rotate-180' : ''}`} />
-                            </div>
+                      <div className="py-3.5">
+                        {/* Row 1: name + stats + chevron */}
+                        <div className="flex justify-between items-center mb-1.5">
+                          <span className="text-base font-semibold text-gray-900">Others</span>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base font-semibold text-gray-900">
+                              {othersPercentage}%&nbsp;<span className="text-sm font-normal text-gray-400">({othersParticipantCount})</span>
+                            </span>
+                            <button
+                              onClick={() => setOthersExpanded(o => !o)}
+                              className="p-0.5 rounded text-gray-400 hover:text-gray-600 transition-colors"
+                              aria-label="Expand custom categories"
+                            >
+                              <ChevronDown size={14} className={`transition-transform ${othersExpanded ? 'rotate-180' : ''}`} />
+                            </button>
                           </div>
-                          {/* Expand: list custom category names */}
-                          {othersExpanded && (
-                            <ul className="mt-2 space-y-1 border-l-2 border-yellow-300 pl-3">
-                              {othersCustomNames.map(name => (
-                                <li key={name} className="text-xs text-gray-500">• {name}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </button>
+                        </div>
+                        {/* Row 2: badge */}
+                        <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }}>
+                          {othersCustomNames.length} custom categories
+                        </span>
+                        {/* Expanded list */}
+                        {othersExpanded && (
+                          <div className="mt-3 pl-3 border-l-2 border-yellow-300">
+                            {othersCustomNames.map(name => (
+                              <div key={name} className="text-sm text-gray-500 py-0.5">• {name}</div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
 
                     {adminAgreement.length === 0 && !hasOthers && (
-                      <p className="text-gray-400 text-sm italic">No data yet.</p>
+                      <p className="text-gray-400 text-sm italic py-4">No data yet.</p>
                     )}
                   </div>
+
 
                   {/* CTA footer */}
                   <div className="px-6 py-3 mt-2 border-t border-gray-100" style={{ backgroundColor: '#F9FAFB' }}>
