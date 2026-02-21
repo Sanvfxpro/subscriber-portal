@@ -553,12 +553,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                               ))}
                             </div>
                             {remaining > 0 && (
-                              <button
-                                className="mt-2.5 text-xs font-medium text-blue-500 hover:text-blue-700 hover:underline transition-colors"
-                                onClick={() => { setActiveTab('categories'); setShowRecycleBin(false); }}
-                              >
-                                +{remaining} more in Categories tab →
-                              </button>
+                              <p className="mt-2.5 text-xs font-medium text-gray-400">+{remaining} more</p>
                             )}
                           </div>
                         );
