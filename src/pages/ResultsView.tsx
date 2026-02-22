@@ -579,8 +579,8 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
 
                   <Card className="shadow-sm overflow-hidden" style={{ padding: 0 }}>
-                    <div className="flex items-center gap-2 px-6 pt-5 pb-3">
-                      <span className="text-lg leading-none flex items-center">🏆</span>
+                    <div className="flex items-start gap-2 px-6 pt-5 pb-3">
+                      <span className="text-lg leading-none flex items-center mt-0.5">🏆</span>
                       <div>
                         <h2 className="text-lg font-bold text-gray-900">Top Agreed Cards</h2>
                         <p className="text-xs text-gray-400 mt-0.5">Cards with highest participant agreement</p>
