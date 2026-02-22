@@ -506,7 +506,15 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
               ✏️ Edit My Submission
             </Button>
             <Button
-              onClick={() => { setExistingSubmission(null); }}
+              onClick={() => {
+                // Reset everything back to the email entry screen
+                setExistingSubmission(null);
+                setEmail('');
+                setEmailError('');
+                setEmailSubmitted(false);
+                setIntroAcknowledged(false);
+                setIsEditMode(false);
+              }}
               variant="secondary"
               className="w-full"
             >
