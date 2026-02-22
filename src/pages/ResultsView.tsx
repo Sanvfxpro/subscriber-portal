@@ -202,13 +202,25 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
 
 
 
-  // 5. Group Submissions for Timeline
-  const groupedResults = results.reduce((acc, result) => {
-    const dateKey = result.createdAt ? new Date(result.createdAt).toLocaleDateString() : 'Unknown';
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(result);
-    return acc;
-  }, {} as Record<string, ResultWithId[]>);
+  const formatDateGroupLabel = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+  };
+
+  // Sort newest-first, then group by date label
+  const groupedResults = [...results]
+    .sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime())
+    .reduce((acc, result) => {
+      const label = result.createdAt ? formatDateGroupLabel(result.createdAt) : 'Unknown';
+      if (!acc[label]) acc[label] = [];
+      acc[label].push(result);
+      return acc;
+    }, {} as Record<string, ResultWithId[]>);
 
   const groupedDeletedResults = deletedResults.reduce((acc, result) => {
     const dateKey = result.createdAt ? new Date(result.createdAt).toLocaleDateString() : 'Unknown';
@@ -630,7 +642,7 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                 <div className="space-y-4">
                   <h2 className="text-xl font-bold text-gray-900">Participant Submissions</h2>
 
-                  {Object.entries(groupedResults).reverse().map(([date, items]) => (
+                  {Object.entries(groupedResults).map(([date, items]) => (
                     <div key={date} className="border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
                       <div
                         className="flex items-center justify-between p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
