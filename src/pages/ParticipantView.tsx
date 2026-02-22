@@ -556,11 +556,12 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
                 setEmail(e.target.value);
                 setEmailError('');
               }}
+              onKeyDown={(e) => e.key === 'Enter' && handleEmailSubmit()}
               placeholder="your.email@example.com"
               error={emailError}
             />
             <Button onClick={handleEmailSubmit} className="w-full">
-              Start Sorting
+              Continue →
             </Button>
           </div>
         </Card>
@@ -578,8 +579,9 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
         }}
       >
         <div className="absolute top-8 left-8">
-          <Button onClick={() => setEmailSubmitted(false)} variant="secondary" size="sm">
-            <ArrowLeft size={20} />
+          <Button onClick={() => setEmailSubmitted(false)} variant="secondary" size="sm" className="flex items-center gap-1.5">
+            <ArrowLeft size={16} />
+            Back
           </Button>
         </div>
         <Card className="p-8 w-full max-w-2xl">
