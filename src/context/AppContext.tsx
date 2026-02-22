@@ -572,7 +572,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .from('sorting_results')
         .select('*')
         .eq('project_id', projectId)
-        .eq('participant_email', email)
+        .ilike('participant_email', email.toLowerCase().trim())
         .eq('status', 'draft')
         .maybeSingle();
 
@@ -593,12 +593,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         .from('sorting_results')
         .select('id, result_data, created_at, updated_at')
         .eq('project_id', projectId)
-        .eq('participant_email', normalizedEmail)
+        .ilike('participant_email', normalizedEmail)
         .eq('status', 'completed')
-        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('checkExistingSubmission error:', error);
+        return null;
+      }
       if (!data) return null;
 
       return {
