@@ -28,9 +28,10 @@ interface AppContextType {
   updateCategory: (projectId: string, categoryId: string, name: string, description?: string) => Promise<void>;
   deleteCategory: (projectId: string, categoryId: string) => Promise<void>;
   reorderCategories: (projectId: string, categories: Category[]) => Promise<void>;
-  submitResult: (projectId: string, result: ParticipantResult) => Promise<void>;
+  submitResult: (projectId: string, result: ParticipantResult, existingResultId?: string) => Promise<void>;
   saveDraft: (projectId: string, result: ParticipantResult) => Promise<void>;
   checkDraft: (projectId: string, email: string) => Promise<ParticipantResult | null>;
+  checkExistingSubmission: (projectId: string, email: string) => Promise<{ id: string; data: ParticipantResult; submittedAt: string } | null>;
   getResults: (projectId: string) => Promise<ResultWithId[]>;
   getDeletedResults: (projectId: string) => Promise<ResultWithId[]>;
   deleteResult: (resultId: string) => Promise<void>;
@@ -585,38 +586,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const submitResult = async (projectId: string, result: ParticipantResult) => {
+  const checkExistingSubmission = async (projectId: string, email: string): Promise<{ id: string; data: ParticipantResult; submittedAt: string } | null> => {
     try {
-      // Check for existing draft to promote
-      const { data: existingDraft } = await supabase
+      const normalizedEmail = email.toLowerCase().trim();
+      const { data, error } = await supabase
         .from('sorting_results')
-        .select('id')
+        .select('id, result_data, created_at, updated_at')
         .eq('project_id', projectId)
-        .eq('participant_email', result.email)
-        .eq('status', 'draft')
+        .eq('participant_email', normalizedEmail)
+        .eq('status', 'completed')
+        .is('deleted_at', null)
         .maybeSingle();
 
+      if (error) throw error;
+      if (!data) return null;
+
+      return {
+        id: data.id,
+        data: data.result_data as ParticipantResult,
+        submittedAt: data.updated_at || data.created_at,
+      };
+    } catch (err) {
+      console.error('Error checking existing submission:', err);
+      return null;
+    }
+  };
+
+  const submitResult = async (projectId: string, result: ParticipantResult, existingResultId?: string) => {
+    try {
       let error;
-      if (existingDraft) {
+
+      if (existingResultId) {
+        // Edit mode: update the existing completed record in-place
         const response = await supabase
           .from('sorting_results')
           .update({
             result_data: result,
             updated_at: new Date().toISOString(),
-            status: 'completed'
           })
-          .eq('id', existingDraft.id);
+          .eq('id', existingResultId);
         error = response.error;
       } else {
-        const response = await supabase
+        // Check for existing draft to promote
+        const { data: existingDraft } = await supabase
           .from('sorting_results')
-          .insert({
-            project_id: projectId,
-            participant_email: result.email,
-            result_data: result,
-            status: 'completed'
-          });
-        error = response.error;
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('participant_email', result.email)
+          .eq('status', 'draft')
+          .maybeSingle();
+
+        if (existingDraft) {
+          const response = await supabase
+            .from('sorting_results')
+            .update({
+              result_data: result,
+              updated_at: new Date().toISOString(),
+              status: 'completed'
+            })
+            .eq('id', existingDraft.id);
+          error = response.error;
+        } else {
+          const response = await supabase
+            .from('sorting_results')
+            .insert({
+              project_id: projectId,
+              participant_email: result.email.toLowerCase().trim(),
+              result_data: result,
+              status: 'completed'
+            });
+          error = response.error;
+        }
       }
 
       if (error) {
@@ -631,7 +671,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     } catch (err) {
       console.error('Error submitting result:', err);
-      // Still update local state optimistically or to reflect "submitted" state in UI if needed
       setResults(prev => ({
         ...prev,
         [projectId]: [...(prev[projectId] || []), result],
@@ -826,6 +865,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         submitResult,
         saveDraft,
         checkDraft,
+        checkExistingSubmission,
         getResults,
         getDeletedResults,
         deleteResult,

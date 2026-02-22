@@ -22,7 +22,7 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   onComplete,
   onNavigate,
 }) => {
-  const { getProject, fetchProjectById, submitResult, saveDraft, checkDraft } = useApp();
+  const { getProject, fetchProjectById, submitResult, saveDraft, checkDraft, checkExistingSubmission } = useApp();
   const [project, setProject] = useState(getProject(projectId));
   const [isLoading, setIsLoading] = useState(!project);
 
@@ -51,6 +51,10 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [additionalComments, setAdditionalComments] = useState('');
+
+  // Duplicate submission state
+  const [existingSubmission, setExistingSubmission] = useState<{ id: string; data: ParticipantResult; submittedAt: string } | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Limit only applies to Hybrid mode as per requirements
   const isLimitReached = project?.type === 'hybrid' && userCategories.length >= 5;
@@ -125,10 +129,20 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
     }
     setEmailError('');
 
-    // Check for existing draft
     setIsLoading(true);
     try {
-      const draft = await checkDraft(projectId, email);
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // First: check if they've already completed a submission
+      const existing = await checkExistingSubmission(projectId, normalizedEmail);
+      if (existing) {
+        setExistingSubmission(existing);
+        setIsLoading(false);
+        return; // Stop here — show the Already Submitted screen
+      }
+
+      // Second: check for an in-progress draft
+      const draft = await checkDraft(projectId, normalizedEmail);
       if (draft) {
         // Restore draft state
         const draftCategories = draft.categories;
@@ -375,10 +389,10 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   const submitSorting = async (comments: string) => {
     setIsPublishing(true);
     try {
-      submitResult(projectId, getCleanResults(comments));
+      submitResult(projectId, getCleanResults(comments), isEditMode ? existingSubmission?.id : undefined);
       setIsPublished(true);
       setShowSubmitModal(false);
-      showToast('Sorting submitted. Thank you!');
+      showToast(isEditMode ? 'Submission updated. Thank you!' : 'Sorting submitted. Thank you!');
       setTimeout(() => {
         onComplete();
       }, 2000);
@@ -421,6 +435,92 @@ export const ParticipantView: React.FC<{ projectId: string; onComplete: () => vo
   const remaining = totalCards - placedCount;
   const canSave = placedCount >= 1;
   const canPublish = remaining === 0;
+
+  // ── Already Submitted Screen ──────────────────────────────────────────────
+  if (existingSubmission && !isEditMode) {
+    const formattedDate = new Date(existingSubmission.submittedAt).toLocaleString('en-US', {
+      month: 'long', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    });
+
+    const handleEditExisting = () => {
+      // Restore previous placements into the sorting UI
+      const prevCategories = existingSubmission.data.categories;
+
+      if (project.type === 'closed' || project.type === 'hybrid') {
+        const merged: ParticipantCategory[] = [];
+        project.categories.forEach(projCat => {
+          const prev = prevCategories.find(d => d.category_name === projCat.name);
+          merged.push({
+            ...(prev || { category_name: projCat.name, cards: [] }),
+            id: projCat.id || projCat.name,
+            originalName: projCat.name,
+            isDefault: true,
+            description: projCat.description,
+          });
+        });
+        prevCategories.forEach(prevCat => {
+          if (!project.categories.some(p => p.name === prevCat.category_name)) {
+            merged.push({ ...prevCat, id: prevCat.category_name, isDefault: false });
+          }
+        });
+        setUserCategories(merged);
+      } else {
+        setUserCategories(prevCategories.map(c => ({ ...c, id: c.category_name, isDefault: false })));
+      }
+
+      const allCards = project.cards.map(c => c.content);
+      const sorted = new Set(prevCategories.flatMap(c => c.cards));
+      setUnsortedCards(allCards.filter(c => !sorted.has(c)));
+
+      setIsEditMode(true);
+      setEmailSubmitted(true);
+      setIntroAcknowledged(true);
+    };
+
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center p-8 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${loginBg})`, backgroundColor: 'var(--color-bg-secondary)' }}
+      >
+        <Card className="p-8 w-full max-w-md text-center">
+          {/* Green checkmark */}
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
+            <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+            Already Submitted!
+          </h2>
+          <p className="text-sm mb-1" style={{ color: 'var(--color-text-secondary)' }}>
+            <span className="font-medium">{email}</span>
+          </p>
+          <p className="text-sm mb-6" style={{ color: 'var(--color-text-secondary)' }}>
+            Completed on <span className="font-medium">{formattedDate}</span>
+          </p>
+
+          <div className="space-y-3">
+            <Button onClick={handleEditExisting} className="w-full">
+              ✏️ Edit My Submission
+            </Button>
+            <Button
+              onClick={() => { setExistingSubmission(null); }}
+              variant="secondary"
+              className="w-full"
+            >
+              Use a Different Email
+            </Button>
+          </div>
+
+          <p className="text-xs mt-5" style={{ color: 'var(--color-text-secondary)' }}>
+            Editing will update your existing submission — no duplicate will be created.
+          </p>
+        </Card>
+      </div>
+    );
+  }
 
   if (!emailSubmitted) {
     return (
