@@ -441,8 +441,8 @@ export const ResultsView: React.FC<{ projectId: string; onNavigate: (page: strin
                         <div className="text-4xl font-bold text-gray-900">{avgCardsSorted}</div>
                         <p className="text-xs text-gray-400 mt-1">cards per participant</p>
                       </div>
-                      <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
-                        <Calendar size={20} />
+                      <div className="bg-purple-100 p-2 rounded-lg flex items-center justify-center">
+                        <span className="text-lg leading-none">📊</span>
                       </div>
                     </div>
                   </Card>
